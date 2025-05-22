@@ -25,7 +25,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: andrew4coding/a08-proxy:latest
+          tags: andrew4coding/aura-frontend:latest
 
   deploy:
     needs: build-and-push
@@ -41,5 +41,5 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
                 #   Reroll Deployment
-                sudo kubectl rollout restart deployment a08-proxy -n default
+                sudo kubectl rollout restart deployment aura-frontend -n default
           EOF
