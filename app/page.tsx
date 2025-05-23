@@ -1,9 +1,13 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import Footer from "@/components/footer"
-import { UtensilsCrossed, Clock, Star, CreditCard, Table, ShoppingCart } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Clock, CreditCard, ShoppingCart, Star, Table, UtensilsCrossed } from "lucide-react"
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
 export default function Home() {
+  
+  redirect("/menu")
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero section */}

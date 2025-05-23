@@ -1,0 +1,5 @@
+services:
+  aura-frontend:
+    image: andrew4coding/aura-frontend
+    ports:
+      - "3000:3000"
