@@ -40,11 +40,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: UtensilsCrossed,
     },
     {
-      name: "Coupon Management",
-      href: "/admin/kupon",
-      icon: Ticket,
-    },
-    {
       name: "Opening Hours",
       href: "/admin/hours",
       icon: Clock,

@@ -112,24 +112,6 @@ export default function AdminDashboard() {
 
           <Card className="bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-medium">Active Coupons</CardTitle>
-              <Ticket className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{summaryData.activeCoupons}</div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Promotional coupons currently active</p>
-              <Button
-                variant="link"
-                className="px-0 text-green-600 dark:text-green-400 mt-2"
-                onClick={() => router.push("/admin/kupon")}
-              >
-                Manage Coupons →
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg font-medium">Pending Orders</CardTitle>
               <ShoppingCart className="h-5 w-5 text-green-600 dark:text-green-400" />
             </CardHeader>
@@ -194,59 +176,6 @@ export default function AdminDashboard() {
               <Button variant="outline" className="w-full mt-4">
                 View All Orders
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800 shadow-md">
-            <CardHeader>
-              <CardTitle>Restaurant Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span className="font-medium">Opening Hours</span>
-                  </div>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    Open
-                  </Badge>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex justify-between py-1">
-                    <span>Monday - Friday</span>
-                    <span>10:00 - 22:00</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>Saturday - Sunday</span>
-                    <span>11:00 - 23:00</span>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full mt-2" onClick={() => router.push("/admin/hours")}>
-                  Update Hours
-                </Button>
-
-                <div className="pt-4 mt-4 border-t">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      <span className="font-medium">Admin Profile</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarFallback className="bg-green-100 text-green-700">A</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">Admin User</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">admin@rizzerve.com</div>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4" onClick={() => router.push("/admin/profile")}>
-                    Edit Profile
-                  </Button>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
