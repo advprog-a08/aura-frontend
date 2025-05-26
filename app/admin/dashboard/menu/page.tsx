@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Pencil, Trash2, Plus, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useMenuQuery, useMenuMutation } from "./hooks"
+import { useMenuQuery, useMenuMutation, useCreateMenu } from "./hooks"
 
 export default function MenuManagement() {
   const { data, isLoading, error } = useMenuQuery()
@@ -27,6 +27,14 @@ export default function MenuManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [addItem, setAddItem] = useState<any>({
+    name: "",
+    description: "",
+    price: "",
+    available: true,
+    image: "",
+    quantity: null,
+  })
   const [currentItem, setCurrentItem] = useState<any>({
     name: "",
     description: "",
@@ -38,9 +46,10 @@ export default function MenuManagement() {
   })
   const { toast } = useToast()
   const menuMutation = useMenuMutation()
+  const createMenu = useCreateMenu()
 
   const handleAddItem = () => {
-    if (!currentItem.name || !currentItem.description || !currentItem.price) {
+    if (!addItem.name || !addItem.description || !addItem.price) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -48,15 +57,32 @@ export default function MenuManagement() {
       })
       return
     }
-
-    // Logic to add new item
-    setIsAddDialogOpen(false)
-    resetForm()
-
-    toast({
-      title: "Menu Item Added",
-      description: `${currentItem.name} has been added to the menu.`,
-    })
+    createMenu.mutate(
+      {
+        name: addItem.name,
+        description: addItem.description,
+        imageUrl: addItem.image,
+        quantity: addItem.quantity ?? null,
+        price: parseFloat(addItem.price),
+      },
+      {
+        onSuccess: (data) => {
+          setIsAddDialogOpen(false)
+          resetAddForm()
+          toast({
+            title: "Menu Item Added",
+            description: `${addItem.name} has been added to the menu.`,
+          })
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Add Failed",
+            description: error?.message || "Failed to add menu item.",
+            variant: "destructive",
+          })
+        },
+      }
+    )
   }
 
   const handleEditItem = () => {
@@ -133,6 +159,17 @@ export default function MenuManagement() {
     })
   }
 
+  const resetAddForm = () => {
+    setAddItem({
+      name: "",
+      description: "",
+      price: "",
+      available: true,
+      image: "",
+      quantity: null,
+    })
+  }
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -150,7 +187,10 @@ export default function MenuManagement() {
         </div>
 
         <div className="flex justify-end mb-4">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open)
+            if (open) resetAddForm()
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-green-700 hover:bg-green-800">
                 <Plus className="mr-2 h-4 w-4" /> Add Menu Item
@@ -166,8 +206,8 @@ export default function MenuManagement() {
                   <Label htmlFor="name">Name</Label>
                   <Input
                     id="name"
-                    value={currentItem.name}
-                    onChange={(e) => setCurrentItem({ ...currentItem, name: e.target.value })}
+                    value={addItem.name}
+                    onChange={(e) => setAddItem({ ...addItem, name: e.target.value })}
                     placeholder="e.g. Nasi Goreng Special"
                   />
                 </div>
@@ -175,8 +215,8 @@ export default function MenuManagement() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={currentItem.description}
-                    onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
+                    value={addItem.description}
+                    onChange={(e) => setAddItem({ ...addItem, description: e.target.value })}
                     placeholder="Describe the menu item"
                   />
                 </div>
@@ -185,27 +225,29 @@ export default function MenuManagement() {
                   <Input
                     id="price"
                     type="number"
-                    value={currentItem.price}
-                    onChange={(e) => setCurrentItem({ ...currentItem, price: e.target.value })}
+                    value={addItem.price}
+                    onChange={(e) => setAddItem({ ...addItem, price: e.target.value })}
                     placeholder="e.g. 35000"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    value={addItem.quantity === null ? "" : addItem.quantity}
+                    onChange={e => setAddItem({ ...addItem, quantity: e.target.value === "" ? null : Number(e.target.value) })}
+                    placeholder="e.g. 10"
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="image">Image URL (Optional)</Label>
                   <Input
                     id="image"
-                    value={currentItem.image}
-                    onChange={(e) => setCurrentItem({ ...currentItem, image: e.target.value })}
+                    value={addItem.image}
+                    onChange={(e) => setAddItem({ ...addItem, image: e.target.value })}
                     placeholder="e.g. /images/nasi-goreng.jpg"
                   />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="available"
-                    checked={currentItem.available}
-                    onCheckedChange={(checked) => setCurrentItem({ ...currentItem, available: checked })}
-                  />
-                  <Label htmlFor="available">Available</Label>
                 </div>
               </div>
               <DialogFooter>
@@ -310,6 +352,16 @@ export default function MenuManagement() {
                   type="number"
                   value={currentItem.price}
                   onChange={(e) => setCurrentItem({ ...currentItem, price: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-quantity">Quantity</Label>
+                <Input
+                  id="edit-quantity"
+                  type="number"
+                  value={currentItem.quantity === null ? "" : currentItem.quantity}
+                  onChange={e => setCurrentItem({ ...currentItem, quantity: e.target.value === "" ? null : Number(e.target.value) })}
+                  placeholder="e.g. 10"
                 />
               </div>
               <div className="grid gap-2">

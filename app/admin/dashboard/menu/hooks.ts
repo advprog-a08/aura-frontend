@@ -42,4 +42,22 @@ export function useMenuMutation() {
       queryClient.invalidateQueries({ queryKey: ["menu-list"] })
     },
   })
+}
+
+export function useCreateMenu() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (menu: { name: string, description: string, imageUrl: string, quantity: number | null, price: number }) => {
+      const res = await fetch("http://localhost:8080/api/menus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(menu),
+      })
+      if (!res.ok) throw new Error("Failed to create menu item")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-list"] })
+    },
+  })
 } 
