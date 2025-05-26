@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
-import { useAdminQuery, useUpdateAdminMutation } from "../../hooks"
+import { useAdminQuery, useUpdateAdminMutation, useDeleteAdminMutation } from "../../hooks"
 
 export default function AdminProfile() {
   const { toast, dismiss } = useToast()
@@ -27,8 +27,8 @@ export default function AdminProfile() {
     if (admin && admin.name) setName(admin.name)
   }, [admin])
 
-  // Update admin name
-  const mutation = useUpdateAdminMutation()
+  const updateMutation = useUpdateAdminMutation()
+  const deleteMutation = useDeleteAdminMutation()
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +37,7 @@ export default function AdminProfile() {
       title: "Updating...",
       description: "Saving your changes.",
     }).id
-    mutation.mutate(name, {
+    updateMutation.mutate(name, {
       onSuccess: () => {
         setSuccess("Profile updated successfully")
         toast({
@@ -57,6 +57,12 @@ export default function AdminProfile() {
         dismiss(toastId)
       },
     })
+  }
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this admin? This action cannot be undone.")) {
+      deleteMutation.mutate()
+    }
   }
 
   return (
@@ -89,7 +95,7 @@ export default function AdminProfile() {
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Enter your full name"
-                disabled={isLoading || mutation.isPending}
+                disabled={isLoading || updateMutation.isPending}
               />
             </div>
             <div className="space-y-2">
@@ -104,10 +110,27 @@ export default function AdminProfile() {
                 placeholder="Enter your email"
               />
             </div>
-            <Button type="submit" className="w-full bg-green-700 hover:bg-green-800" disabled={isLoading || mutation.isPending}>
-              {mutation.isPending ? "Saving..." : "Update Profile"}
+            <Button type="submit" className="w-full bg-green-700 hover:bg-green-800" disabled={isLoading || updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Update Profile"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+      <Card className="mt-4">
+        <CardHeader>
+          <CardTitle>Delete Admin</CardTitle>
+          <CardDescription>Remove your admin account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            type="button"
+            variant="destructive"
+            className="w-full"
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Delete Admin"}
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -115,3 +115,35 @@ export function useUpdateAdminMutation() {
     },
   });
 }
+
+export function useDeleteAdminMutation() {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: async () => {
+      const token = localStorage?.getItem('token');
+      const res = await fetch(process.env.NEXT_PUBLIC_SIGMA_AUTHENTICATION + "/admin", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (res.status >= 400) {
+        router.replace("/admin/auth/login");
+        throw new Error("Unauthorized");
+      }
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete admin");
+      }
+
+      return null;
+    },
+    onSuccess: () => {
+      localStorage.removeItem("token");
+      router.push("/admin/auth/login");
+    },
+  });
+}
