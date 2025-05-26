@@ -7,7 +7,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { TableIcon as TableRestaurant, UtensilsCrossed, Ticket, Menu, LogOut, Home, User, Clock } from "lucide-react"
+import { TableIcon as TableRestaurant, UtensilsCrossed, Menu, LogOut, Home, User } from "lucide-react"
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -20,36 +20,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const navigation = [
     {
-      name: "Dashboard",
+      name: "Home",
       href: "/admin/dashboard",
       icon: Home,
     },
     {
       name: "Profile",
-      href: "/admin/profile",
+      href: "/admin/dashboard/profile",
       icon: User,
     },
     {
       name: "Table Management",
-      href: "/admin/meja",
+      href: "/admin/dashboard/meja",
       icon: TableRestaurant,
     },
     {
       name: "Menu Management",
-      href: "/admin/menu",
+      href: "/admin/dashboard/menu",
       icon: UtensilsCrossed,
-    },
-    {
-      name: "Opening Hours",
-      href: "/admin/hours",
-      icon: Clock,
-      optional: true,
     },
   ]
 
   const handleLogout = () => {
-    // In a real app, this would clear the session/token
-    router.push("/login")
+    localStorage.removeItem("token");
+    router.push("/admin/auth/login");
   }
 
   return (
@@ -68,8 +62,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex flex-col flex-1 px-4 mt-5">
             <nav className="flex-1 space-y-2">
               {navigation.map((item) => {
-                if (item.optional) return null // Hide optional features unless enabled
-
                 const isActive = pathname === item.href
 
                 return (
@@ -131,8 +123,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
                 <nav className="flex-1 px-4 pt-5 pb-4 space-y-2">
                   {navigation.map((item) => {
-                    if (item.optional) return null // Hide optional features unless enabled
-
                     const isActive = pathname === item.href
 
                     return (

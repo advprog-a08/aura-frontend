@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import AdminLayout from "@/components/admin-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -201,7 +200,7 @@ export default function MenuManagement() {
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="p-6">
         <div className="flex flex-col gap-2 mb-6">
           <h1 className="text-3xl font-bold text-green-800 dark:text-green-400">Menu Management</h1>
@@ -422,6 +421,6 @@ export default function MenuManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   )
 }

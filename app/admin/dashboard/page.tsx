@@ -1,12 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import AdminLayout from "@/components/admin-layout"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TableIcon as TableRestaurant, UtensilsCrossed, Ticket, ShoppingCart, Clock, Users } from "lucide-react"
+import { TableIcon as TableRestaurant, UtensilsCrossed, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -64,7 +63,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <AdminLayout>
+    <>
       <div className="p-6">
         <div className="flex flex-col gap-2 mb-6">
           <h1 className="text-3xl font-bold text-green-800 dark:text-green-400">Admin Dashboard</h1>
@@ -82,13 +81,9 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-3xl font-bold">{summaryData.totalMeja}</div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Active tables in your restaurant</p>
-              <Button
-                variant="link"
-                className="px-0 text-green-600 dark:text-green-400 mt-2"
-                onClick={() => router.push("/admin/meja")}
-              >
+              <Link href="/admin/dashboard/meja" className="px-0 text-green-600 dark:text-green-400 mt-2">
                 Manage Tables →
-              </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -100,13 +95,9 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-3xl font-bold">{summaryData.totalMenuItems}</div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Dishes available on your menu</p>
-              <Button
-                variant="link"
-                className="px-0 text-green-600 dark:text-green-400 mt-2"
-                onClick={() => router.push("/admin/menu")}
-              >
+              <Link href="/admin/dashboard/menu" className="px-0 text-green-600 dark:text-green-400 mt-2">
                 Manage Menu →
-              </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -118,13 +109,9 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-3xl font-bold">{summaryData.pendingOrders}</div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Orders waiting to be processed</p>
-              <Button
-                variant="link"
-                className="px-0 text-green-600 dark:text-green-400 mt-2"
-                onClick={() => router.push("/admin/orders")}
-              >
+              <Link href="/admin/dashboard/orders" className="px-0 text-green-600 dark:text-green-400 mt-2">
                 View Orders →
-              </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
@@ -180,6 +167,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    </>
   )
 }
