@@ -27,6 +27,9 @@ export default async function customFetch(url: string, options: RequestInit = {}
         return data;
     } catch (error) {
         // You can customize error handling here if needed
-        throw new Error(`Fetch failed: ${(error as Error).message}`);
+        return {
+            success: false,
+            data: null
+        }
     }
 }
