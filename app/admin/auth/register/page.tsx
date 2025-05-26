@@ -7,7 +7,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
+import { useAdminRegisterMutation } from "../../hooks";
+import Link from "next/link";
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/;
 
 const schema = z.object({
@@ -27,19 +28,12 @@ export default function AdminRegisterPage() {
     defaultValues: { email: "", name: "", password: "" },
   });
 
+  const mutation = useAdminRegisterMutation();
+
   async function onSubmit(data: RegisterForm) {
     setError(null);
     try {
-      const res = await fetch("http://localhost:8082/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Registration failed");
-      }
-      router.push("/admin/auth/login");
+      await mutation.mutateAsync(data);
     } catch (e: any) {
       setError(e.message || "Registration failed");
     }
@@ -91,6 +85,7 @@ export default function AdminRegisterPage() {
         />
         <Button type="submit" className="w-full">Register</Button>
       </form>
+      <Link href="/admin/auth/login" className="text-sm text-blue-500 hover:text-blue-700">Already have an account? Login</Link>
     </Form>
   );
 }

@@ -7,6 +7,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useLoginMutation } from "../../hooks";
+import Link from "next/link";
 
 const schema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -23,25 +25,12 @@ export default function AdminLoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
+  const mutation = useLoginMutation();
+
   async function onSubmit(data: LoginForm) {
     setError(null);
     try {
-      const res = await fetch("http://localhost:8082/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Login failed");
-      }
-      const result = await res.json();
-      if (result.token) {
-        localStorage.setItem("token", result.token);
-        router.push("/admin/dashboard");
-      } else {
-        throw new Error("No token returned");
-      }
+      await mutation.mutateAsync(data);
     } catch (e: any) {
       setError(e.message || "Login failed");
     }
@@ -80,6 +69,7 @@ export default function AdminLoginPage() {
         />
         <Button type="submit" className="w-full">Login</Button>
       </form>
+      <Link href="/admin/auth/register" className="text-sm text-blue-500 hover:text-blue-700">Don't have an account? Register</Link>
     </Form>
   );
 }
