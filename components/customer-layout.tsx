@@ -9,15 +9,37 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, ShoppingCart, Star, LogOut } from "lucide-react"
 import Footer from "@/components/footer"
+import { useMutation } from "@tanstack/react-query"
 
 interface CustomerLayoutProps {
   children: React.ReactNode
 }
 
+export function useLogoutMutation() {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async () => {
+      const sessionId = localStorage.getItem("session_id");
+      const res = await fetch(process.env.NEXT_PUBLIC_OHIO_ORDER + "/api/v1/meja/session/" + sessionId + "/deactivate", {
+        method: "POST",
+      });
+
+      return res.json();
+    },
+    onSuccess: (data) => {
+      localStorage.removeItem("session_id");
+      router.push("/");
+    },
+  });
+}
+
+
 export default function CustomerLayout({ children }: CustomerLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const mutation = useLogoutMutation();
 
   // Update the navigation array to remove checkout from the navbar
   const navigation = [
@@ -39,8 +61,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   ]
 
   const handleLogout = () => {
-    // In a real app, this would clear the session/token
-    router.push("/login")
+    mutation.mutate();
   }
 
   return (
