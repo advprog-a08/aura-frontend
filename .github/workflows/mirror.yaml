@@ -1,0 +1,21 @@
+name: Mirror to Personal Repo
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout org repo
+        uses: actions/checkout@v3
+
+      - name: Push to personal mirror
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          git remote add personal https://andrew4coding:${{ secrets.PERSONAL_REPO_TOKEN }}@github.com/andrew4coding/aura-frontend.git
+          git push personal main --force
