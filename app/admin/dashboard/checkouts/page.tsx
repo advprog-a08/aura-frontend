@@ -45,9 +45,9 @@ export default function AdminOrders() {
   const [showCancelled, setShowCancelled] = useState(false)
   const { toast } = useToast()
 
-  // Filtering logic
-  const filteredCheckouts = checkouts.filter((checkout) =>
-    showCancelled ? checkout.state === "CANCELLED" : checkout.state !== "CANCELLED"
+  // Filtering logic for new data structure
+  const filteredCheckouts = checkouts.filter((item) =>
+    showCancelled ? item.checkout.state === "CANCELLED" : item.checkout.state !== "CANCELLED"
   );
 
   const formatPrice = (price: number) => {
@@ -84,32 +84,21 @@ export default function AdminOrders() {
         <div>Loading...</div>
       ) : (
         <div className="space-y-6">
-          {filteredCheckouts.map((checkout) => (
-            <Card key={checkout.id} className="mb-6 border border-gray-200 dark:border-gray-700 rounded-xl transition">
+          {filteredCheckouts.map((item) => (
+            <Card key={item.checkout.id} className="mb-6 border border-gray-200 dark:border-gray-700 rounded-xl transition">
               <CardHeader className="flex flex-row items-center justify-between gap-6 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-t-xl px-6 py-4">
                 <div>
                   <CardTitle className="text-xl font-bold text-green-800 dark:text-green-300 flex items-center gap-2">
-                    <span className="inline-block bg-green-200 dark:bg-green-700 text-green-900 dark:text-green-100 rounded px-2 py-0.5 text-xs font-semibold">#{checkout.id}</span>
+                    <span className="inline-block bg-green-200 dark:bg-green-700 text-green-900 dark:text-green-100 rounded px-2 py-0.5 text-xs font-semibold">#{item.checkout.id}</span>
                     Checkout
                   </CardTitle>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    State: <span className="font-semibold">{checkout.state}</span>
+                    State: <span className="font-semibold">{item.checkout.state}</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold text-base text-green-700 dark:text-green-200">
-                    Meja: <span className="font-bold">{checkout.order?.meja?.nomorMeja || "-"}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Status: <span className={
-                      checkout.order?.meja?.status === "Available"
-                        ? "text-green-600 dark:text-green-300"
-                        : checkout.order?.meja?.status === "Occupied"
-                          ? "text-amber-600 dark:text-amber-300"
-                          : "text-red-600 dark:text-red-300"
-                    }>
-                      {checkout.order?.meja?.status}
-                    </span>
+                    Meja: <span className="font-bold">{item.order?.nomorMeja || "-"}</span>
                   </div>
                 </div>
               </CardHeader>
@@ -118,46 +107,41 @@ export default function AdminOrders() {
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <span className="font-semibold text-gray-700 dark:text-gray-200">Order ID:</span>
-                      <span className="text-gray-900 dark:text-gray-100">{checkout.order?.id}</span>
-                    </div>
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="font-semibold text-gray-700 dark:text-gray-200">Locked:</span>
-                      <span className={
-                        checkout.order?.locked
-                          ? "text-red-600 dark:text-red-400 font-semibold"
-                          : "text-green-600 dark:text-green-400 font-semibold"
-                      }>
-                        {checkout.order?.locked ? "Yes" : "No"}
-                      </span>
+                      <span className="text-gray-900 dark:text-gray-100">{item.order?.id}</span>
                     </div>
                   </div>
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <span className="font-semibold text-gray-700 dark:text-gray-200">Created At:</span>
-                      <span className="text-gray-900 dark:text-gray-100">{checkout.order?.createdAt || "-"}</span>
+                      <span className="text-gray-900 dark:text-gray-100">{item.order?.createdAt || "-"}</span>
                     </div>
                     <div className="mb-2 flex items-center gap-2">
                       <span className="font-semibold text-gray-700 dark:text-gray-200">Updated At:</span>
-                      <span className="text-gray-900 dark:text-gray-100">{checkout.order?.updatedAt || "-"}</span>
+                      <span className="text-gray-900 dark:text-gray-100">{item.order?.updatedAt || "-"}</span>
                     </div>
                   </div>
                 </div>
                 <div className="border-t border-gray-200 dark:border-gray-600 my-4"></div>
                 <div className="mb-2">
                   <span className="font-semibold text-gray-700 dark:text-gray-200">Order Items:</span>
-                  {checkout.order?.orderItems?.length > 0 ? (
+                  {item.order?.items?.length > 0 ? (
                     <div className="mt-2 space-y-2">
-                      {checkout.order.orderItems.map((item: any) => (
+                      {item.order.items.map((orderItem: any) => (
                         <div
-                          key={item.id}
-                          className="flex justify-between items-center text-sm bg-gray-50 dark:bg-gray-800 rounded px-3 py-2 border border-gray-100 dark:border-gray-700"
+                          key={orderItem.id}
+                          className="flex flex-col md:flex-row md:items-center md:justify-between text-sm bg-gray-50 dark:bg-gray-800 rounded px-3 py-2 border border-gray-100 dark:border-gray-700 gap-2"
                         >
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-800 dark:text-gray-100">Menu Item ID: {item.menuItemId}</span>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-800 dark:text-gray-100">{orderItem.menuItemName}</div>
+                            {orderItem.menuItemDescription && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{orderItem.menuItemDescription}</div>
+                            )}
                           </div>
-                          <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded px-2 py-0.5 font-semibold">
-                            Qty: {item.quantity}
-                          </span>
+                          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                            <span className="text-xs text-gray-600 dark:text-gray-300">Price: {formatPrice(orderItem.price)}</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-300">Qty: {orderItem.quantity}</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-300">Subtotal: {formatPrice(orderItem.subtotal)}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -165,9 +149,14 @@ export default function AdminOrders() {
                     <div className="text-xs text-gray-400 mt-1 italic">No items ordered.</div>
                   )}
                 </div>
-                {checkout.state !== "COMPLETED" && checkout.state !== "CANCELLED" && (
+                <div className="flex justify-end mt-4">
+                  <span className="font-bold text-lg text-green-800 dark:text-green-300">
+                    Total: {formatPrice(item.order?.total || 0)}
+                  </span>
+                </div>
+                {item.checkout.state !== "COMPLETED" && item.checkout.state !== "CANCELLED" && (
                   <div className="mt-4">
-                    <AdvanceStateButton orderId={checkout.id} onSuccess={refetch} />
+                    <AdvanceStateButton orderId={item.checkout.id} onSuccess={refetch} />
                   </div>
                 )}
               </CardContent>
@@ -185,7 +174,7 @@ export default function AdminOrders() {
           <DialogHeader>
             <DialogTitle>Order Details</DialogTitle>
             <DialogDescription>
-              {selectedOrder && `Order #${selectedOrder.id} - Table ${selectedOrder.tableNumber}`}
+              {selectedOrder && `Order #${selectedOrder.checkout.id} - Table ${selectedOrder.order?.nomorMeja}`}
             </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
@@ -194,12 +183,19 @@ export default function AdminOrders() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Items</h4>
                   <div className="space-y-2">
-                    {selectedOrder.items.map((item: any) => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <span>
-                          {item.name} x {item.quantity}
-                        </span>
-                        <span>{formatPrice(item.price * item.quantity)}</span>
+                    {selectedOrder.order?.items?.map((item: any) => (
+                      <div key={item.id} className="flex flex-col md:flex-row md:items-center md:justify-between text-sm bg-gray-50 dark:bg-gray-800 rounded px-3 py-2 border border-gray-100 dark:border-gray-700 gap-2">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800 dark:text-gray-100">{item.menuItemName}</div>
+                          {item.menuItemDescription && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{item.menuItemDescription}</div>
+                          )}
+                        </div>
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                          <span className="text-xs text-gray-600 dark:text-gray-300">Price: {formatPrice(item.price)}</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-300">Qty: {item.quantity}</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-300">Subtotal: {formatPrice(item.subtotal)}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -207,7 +203,7 @@ export default function AdminOrders() {
                 <div className="pt-2 border-t">
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span>{formatPrice(selectedOrder.total)}</span>
+                    <span>{formatPrice(selectedOrder.order?.total || 0)}</span>
                   </div>
                 </div>
                 <div className="pt-2 border-t">
@@ -217,7 +213,7 @@ export default function AdminOrders() {
                       variant="outline"
                       className="bg-green-50 text-green-700 border-green-200"
                     >
-                      {selectedOrder.status}
+                      {selectedOrder.checkout.state}
                     </Badge>
                   </div>
                 </div>
