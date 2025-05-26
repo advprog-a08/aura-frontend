@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Pencil, Trash2, Plus, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useMenuQuery } from "./hooks"
+import { useMenuQuery, useMenuMutation } from "./hooks"
 
 export default function MenuManagement() {
   const { data, isLoading, error } = useMenuQuery()
@@ -33,8 +33,11 @@ export default function MenuManagement() {
     price: "",
     available: true,
     image: "",
+    id: "",
+    quantity: null,
   })
   const { toast } = useToast()
+  const menuMutation = useMenuMutation()
 
   const handleAddItem = () => {
     if (!currentItem.name || !currentItem.description || !currentItem.price) {
@@ -65,15 +68,33 @@ export default function MenuManagement() {
       })
       return
     }
-
-    // Logic to update item
-    setIsEditDialogOpen(false)
-    resetForm()
-
-    toast({
-      title: "Menu Item Updated",
-      description: `${currentItem.name} has been updated.`,
-    })
+    menuMutation.mutate(
+      {
+        id: currentItem.id,
+        name: currentItem.name,
+        description: currentItem.description,
+        imageUrl: currentItem.image,
+        quantity: currentItem.quantity ?? null,
+        price: parseFloat(currentItem.price),
+      },
+      {
+        onSuccess: (data) => {
+          setIsEditDialogOpen(false)
+          resetForm()
+          toast({
+            title: "Menu Item Updated",
+            description: `${currentItem.name} has been updated.`,
+          })
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Update Failed",
+            description: error?.message || "Failed to update menu item.",
+            variant: "destructive",
+          })
+        },
+      }
+    )
   }
 
   const handleDeleteItem = () => {
@@ -94,6 +115,8 @@ export default function MenuManagement() {
       ...item,
       price: item.price.toString(),
       image: item.imageUrl || item.image || "",
+      id: item.id,
+      quantity: item.quantity ?? null,
     })
     setIsEditDialogOpen(true)
   }
@@ -105,6 +128,8 @@ export default function MenuManagement() {
       price: "",
       available: true,
       image: "",
+      id: "",
+      quantity: null,
     })
   }
 
