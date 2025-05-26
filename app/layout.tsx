@@ -1,6 +1,5 @@
 'use client'
 
-import { ThemeProvider } from "@/components/theme-provider"
 import { Inter } from "next/font/google"
 import type React from "react"
 import "./globals.css"
@@ -18,9 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-            {children}
-          </ThemeProvider>
+          {children}
         </QueryClientProvider>
       </body>
     </html>

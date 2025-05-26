@@ -14,7 +14,7 @@ export default function AdminProfile() {
   const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [success, setSuccess] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
+  const [imageUrl, setImageUrl] = useState("https://api.dicebear.com/9.x/initials/svg?seed=RIZZserve")
 
   // Fetch admin data
   const {
