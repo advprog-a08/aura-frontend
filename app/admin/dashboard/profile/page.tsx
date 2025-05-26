@@ -14,6 +14,7 @@ export default function AdminProfile() {
   const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [success, setSuccess] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
 
   // Fetch admin data
   const {
@@ -22,9 +23,11 @@ export default function AdminProfile() {
     error,
   } = useAdminQuery()
 
-  // Set name when admin data is loaded
   useEffect(() => {
-    if (admin && admin.name) setName(admin.name)
+    if (admin && admin.name) {
+      setName(admin.name)
+      setImageUrl(`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(admin.name)}`)
+    }
   }, [admin])
 
   const updateMutation = useUpdateAdminMutation()
@@ -76,7 +79,7 @@ export default function AdminProfile() {
           <form onSubmit={handleProfileUpdate} className="space-y-4">
             <div className="flex justify-center mb-6">
               <img
-                src={`https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}`}
+                src={imageUrl}
                 alt="Profile Avatar"
                 className="h-24 w-24 rounded-full bg-green-100"
               />
