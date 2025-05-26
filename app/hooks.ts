@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function useLoginMutation() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export function useLoginMutation() {
 
       if (!resMeja.ok) {
         const err = await resMeja.json();
-        throw new Error(err.message || "Login failed");
+        toast.error(err.message || "Failed to fetch table");
       }
 
       const mejaId = await resMeja.json().then(r => r.id);
