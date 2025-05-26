@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { useState } from "react";
+import { toast } from "sonner";
 import { useLoginMutation } from "./hooks";
 
 export default function Home() {
   const [tableName, setTableName] = useState("")
-  const router = useRouter()
   const mutation = useLoginMutation();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -15,11 +15,21 @@ export default function Home() {
     if (tableName.trim()) {
       mutation.mutate({ nomorMeja: tableName });
     }
+    else {
+      toast.error("Please enter a valid table name.");
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-green-100 dark:from-green-900 dark:to-green-800">
-      <form onSubmit={handleSubmit} className="flex flex-col items-center bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md">
+      <Image
+        src={'https://www.eatingwell.com/thmb/088YHsNmHkUQ7iNGP4375MiAXOY=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/article_7866255_foods-you-should-eat-every-week-to-lose-weight_-04-d58e9c481bce4a29b47295baade4072d.jpg'}
+        alt="Restaurant Background"
+        className="absolute inset-0 object-cover w-full h-full opacity-10 z-0"
+        width={1500}
+        height={1000}
+      />
+      <form onSubmit={handleSubmit} className="flex flex-col items-center bg-white dark:bg-gray-900 p-8 rounded-lg shadow-md relative z-20">
         <label htmlFor="tableName" className="mb-4 text-2xl font-bold text-green-800 dark:text-green-300">Enter Table Name</label>
         <input
           id="tableName"
@@ -30,7 +40,9 @@ export default function Home() {
           placeholder="e.g. M05"
           autoFocus
         />
-        <Button type="submit" className="bg-green-700 hover:bg-green-800 text-white px-8 py-2 text-lg">Continue</Button>
+        <Button type="submit" className="w-full">
+          Enjoy Meal!
+        </Button>
       </form>
     </div>
   )

@@ -1,9 +1,10 @@
 'use client'
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Inter } from "next/font/google"
 import type React from "react"
+import { Toaster } from "sonner"
 import "./globals.css"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,6 +20,7 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           {children}
         </QueryClientProvider>
+        <Toaster />
       </body>
     </html>
   )

@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, ShoppingCart, Star, LogOut } from "lucide-react"
-import Footer from "@/components/footer"
 import { useMutation } from "@tanstack/react-query"
+import { LogOut, Menu, ShoppingCart, Star } from "lucide-react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface CustomerLayoutProps {
   children: React.ReactNode
@@ -42,7 +42,6 @@ export function useLogoutMutation() {
 
 export default function CustomerLayout({ children }: CustomerLayoutProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mutation = useLogoutMutation();
 
