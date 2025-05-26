@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Pencil, Trash2, Plus, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useMenuQuery, useMenuMutation, useCreateMenu } from "./hooks"
+import { useMenuQuery, useMenuMutation, useCreateMenu, useDeleteMutation } from "./hooks"
 
 export default function MenuManagement() {
   const { data, isLoading, error } = useMenuQuery()
@@ -47,6 +47,7 @@ export default function MenuManagement() {
   const { toast } = useToast()
   const menuMutation = useMenuMutation()
   const createMenu = useCreateMenu()
+  const deleteMutation = useDeleteMutation()
 
   const handleAddItem = () => {
     if (!addItem.name || !addItem.description || !addItem.price) {
@@ -123,16 +124,22 @@ export default function MenuManagement() {
     )
   }
 
-  const handleDeleteItem = () => {
-    if (deleteId === null) return
-
-    // Logic to delete item
-    setDeleteId(null)
-
-    toast({
-      title: "Menu Item Deleted",
-      description: "The menu item has been deleted successfully.",
-      variant: "destructive",
+  const handleDeleteItem = (id: string) => {
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        toast({
+          title: "Menu Item Deleted",
+          description: "The menu item has been deleted successfully.",
+          variant: "destructive",
+        })
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Delete Failed",
+          description: error?.message || "Failed to delete menu item.",
+          variant: "destructive",
+        })
+      },
     })
   }
 
@@ -297,7 +304,9 @@ export default function MenuManagement() {
                           <Button variant="outline" size="icon" onClick={() => openEditDialog(item)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="icon" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" disabled>
+                          <Button variant="outline" size="icon" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" onClick={() => {
+                            if (window.confirm('Are you sure you want to delete this menu item?')) handleDeleteItem(item.id)
+                          }}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

@@ -60,4 +60,20 @@ export function useCreateMenu() {
       queryClient.invalidateQueries({ queryKey: ["menu-list"] })
     },
   })
+}
+
+export function useDeleteMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`http://localhost:8080/api/menus/${id}`, {
+        method: "DELETE",
+      })
+      if (!res.ok) throw new Error("Failed to delete menu item")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["menu-list"] })
+    },
+  })
 } 
