@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { TableIcon as TableRestaurant, UtensilsCrossed, Menu, LogOut, Home, User } from "lucide-react"
+import { useAdminQuery } from "../hooks"
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -17,6 +18,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  useAdminQuery();
 
   const navigation = [
     {
