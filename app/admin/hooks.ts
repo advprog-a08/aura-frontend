@@ -1,10 +1,13 @@
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type Admin = {
   name: string;
   email: string;
 };
+
+// Types for checkouts (can be improved with more details)
+export type Checkout = any;
 
 export function useAdminRegisterMutation() {
   const router = useRouter();
@@ -144,6 +147,44 @@ export function useDeleteAdminMutation() {
     onSuccess: () => {
       localStorage.removeItem("token");
       router.push("/admin/auth/login");
+    },
+  });
+}
+
+export function useCheckoutsQuery() {
+  return useQuery<Checkout[], Error>({
+    queryKey: ["checkouts"],
+    queryFn: async () => {
+      const token = localStorage?.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_OHIO_ORDER || ""}/api/checkout`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch checkouts");
+      return res.json();
+    },
+  });
+}
+
+export function useAdvanceOrderStateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderId: number) => {
+      const token = localStorage?.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_OHIO_ORDER || ""}/api/checkout/${orderId}/advance`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!res.ok) throw new Error("Failed to advance order state");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["checkouts"] });
     },
   });
 }
