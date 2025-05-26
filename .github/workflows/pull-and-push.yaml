@@ -1,0 +1,31 @@
+name: Sync from Organization Repo
+
+on:
+  repository_dispatch:
+    types: [org_push] # A custom event to trigger this workflow
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout personal repo
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+
+      - name: Add remote for organization repo
+        run: git remote add upstream https://github.com/advprog-a08/aura-frontend.git
+        
+      - name: Fetch changes from organization repo
+        run: git fetch upstream main
+
+      - name: Merge changes from organization repo
+        run: git merge upstream/main --allow-unrelated-histories
+
+      - name: Push changes to personal repo
+        run: git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
