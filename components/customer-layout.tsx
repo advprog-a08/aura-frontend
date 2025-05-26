@@ -21,8 +21,13 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: async () => {
       const sessionId = localStorage.getItem("session_id");
-      const res = await fetch(process.env.NEXT_PUBLIC_OHIO_ORDER + "/api/v1/meja/session/" + sessionId + "/deactivate", {
+
+      const headers: Record<string, string> = {};
+      if (sessionId) headers["X-Session-Id"] = sessionId;
+
+      const res = await fetch(process.env.NEXT_PUBLIC_OHIO_ORDER + "/api/v1/meja/session/deactivate", {
         method: "POST",
+        headers,
       });
 
       return res.json();
