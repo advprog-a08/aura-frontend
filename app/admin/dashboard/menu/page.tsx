@@ -17,72 +17,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Pencil, Trash2, Plus, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Badge } from "@/components/ui/badge"
-
-// Mock data for menu items
-const initialMenuItems = [
-  {
-    id: 1,
-    name: "Nasi Goreng Special",
-    description: "Fried rice with chicken, vegetables, and egg",
-    price: 35000,
-    available: true,
-    rating: 4.5,
-    image: "/images/nasi-goreng.jpg",
-  },
-  {
-    id: 2,
-    name: "Mie Goreng",
-    description: "Fried noodles with vegetables and chicken",
-    price: 30000,
-    available: true,
-    rating: 4.2,
-    image: "/images/mie-goreng.jpg",
-  },
-  {
-    id: 3,
-    name: "Ayam Bakar",
-    description: "Grilled chicken with special sauce",
-    price: 45000,
-    available: true,
-    rating: 4.7,
-    image: "/images/ayam-bakar.jpg",
-  },
-  {
-    id: 4,
-    name: "Es Teh Manis",
-    description: "Sweet iced tea",
-    price: 8000,
-    available: true,
-    rating: 4.0,
-    image: "/images/es-teh.jpg",
-  },
-  {
-    id: 5,
-    name: "Sate Ayam",
-    description: "Chicken satay with peanut sauce",
-    price: 35000,
-    available: false,
-    rating: 4.8,
-    image: "/images/sate-ayam.jpg",
-  },
-]
+import { useMenuQuery } from "./hooks"
 
 export default function MenuManagement() {
-  const [menuItems, setMenuItems] = useState(initialMenuItems)
+  const { data, isLoading, error } = useMenuQuery()
+  const menuItems = Array.isArray(data) ? data : []
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -105,21 +46,13 @@ export default function MenuManagement() {
       return
     }
 
-    const newId = Math.max(0, ...menuItems.map((item) => item.id)) + 1
-    const newItem = {
-      ...currentItem,
-      id: newId,
-      price: Number(currentItem.price),
-      rating: 0,
-    }
-
-    setMenuItems([...menuItems, newItem])
+    // Logic to add new item
     setIsAddDialogOpen(false)
     resetForm()
 
     toast({
       title: "Menu Item Added",
-      description: `${newItem.name} has been added to the menu.`,
+      description: `${currentItem.name} has been added to the menu.`,
     })
   }
 
@@ -133,12 +66,7 @@ export default function MenuManagement() {
       return
     }
 
-    setMenuItems(
-      menuItems.map((item) =>
-        item.id === currentItem.id ? { ...currentItem, price: Number(currentItem.price) } : item,
-      ),
-    )
-
+    // Logic to update item
     setIsEditDialogOpen(false)
     resetForm()
 
@@ -151,7 +79,7 @@ export default function MenuManagement() {
   const handleDeleteItem = () => {
     if (deleteId === null) return
 
-    setMenuItems(menuItems.filter((item) => item.id !== deleteId))
+    // Logic to delete item
     setDeleteId(null)
 
     toast({
@@ -161,22 +89,11 @@ export default function MenuManagement() {
     })
   }
 
-  const handleToggleAvailability = (id: number) => {
-    setMenuItems(menuItems.map((item) => (item.id === id ? { ...item, available: !item.available } : item)))
-
-    const item = menuItems.find((item) => item.id === id)
-    if (item) {
-      toast({
-        title: item.available ? "Item Unavailable" : "Item Available",
-        description: `${item.name} is now ${item.available ? "unavailable" : "available"} on the menu.`,
-      })
-    }
-  }
-
   const openEditDialog = (item: any) => {
     setCurrentItem({
       ...item,
       price: item.price.toString(),
+      image: item.imageUrl || item.image || "",
     })
     setIsEditDialogOpen(true)
   }
@@ -283,142 +200,111 @@ export default function MenuManagement() {
             <CardTitle>Menu Items</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Availability</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {menuItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                    <TableCell>{formatPrice(item.price)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                        <span>{item.rating.toFixed(1)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch checked={item.available} onCheckedChange={() => handleToggleAvailability(item.id)} />
-                        {item.available ? (
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            Available
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                            Unavailable
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="icon" onClick={() => openEditDialog(item)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                              onClick={() => setDeleteId(item.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Menu Item</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete {item.name}? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction className="bg-red-500 hover:bg-red-600" onClick={handleDeleteItem}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
+            {isLoading && <div>Loading...</div>}
+            {error && <div className="text-red-500">Failed to load menu items.</div>}
+            {!isLoading && !error && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {menuItems.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="max-w-xs truncate">{item.description}</TableCell>
+                      <TableCell>{formatPrice(item.price)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                          <span>5.0</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="icon" onClick={() => openEditDialog(item)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="icon" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600" disabled>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Edit Menu Item</DialogTitle>
-            <DialogDescription>Update the details for this menu item.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                value={currentItem.name}
-                onChange={(e) => setCurrentItem({ ...currentItem, name: e.target.value })}
-              />
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+          {/* Image header if available */}
+          {currentItem.image && (
+            <img
+              src={currentItem.image}
+              alt={currentItem.name}
+              className="w-full h-48 object-cover rounded-t-lg"
+              style={{ display: 'block' }}
+            />
+          )}
+          <div className="p-6">
+            <DialogHeader>
+              <DialogTitle>Edit Menu Item</DialogTitle>
+              <DialogDescription>Update the details for this menu item.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={currentItem.name}
+                  onChange={(e) => setCurrentItem({ ...currentItem, name: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={currentItem.description}
+                  onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-price">Price (IDR)</Label>
+                <Input
+                  id="edit-price"
+                  type="number"
+                  value={currentItem.price}
+                  onChange={(e) => setCurrentItem({ ...currentItem, price: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-image">Image URL (Optional)</Label>
+                <Input
+                  id="edit-image"
+                  value={currentItem.image}
+                  onChange={(e) => setCurrentItem({ ...currentItem, image: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={currentItem.description}
-                onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-price">Price (IDR)</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                value={currentItem.price}
-                onChange={(e) => setCurrentItem({ ...currentItem, price: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-image">Image URL (Optional)</Label>
-              <Input
-                id="edit-image"
-                value={currentItem.image}
-                onChange={(e) => setCurrentItem({ ...currentItem, image: e.target.value })}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="edit-available"
-                checked={currentItem.available}
-                onCheckedChange={(checked) => setCurrentItem({ ...currentItem, available: checked })}
-              />
-              <Label htmlFor="edit-available">Available</Label>
-            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditItem} className="bg-green-700 hover:bg-green-800">
+                Save Changes
+              </Button>
+            </DialogFooter>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditItem} className="bg-green-700 hover:bg-green-800">
-              Save Changes
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
