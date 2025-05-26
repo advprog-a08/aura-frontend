@@ -11,7 +11,7 @@ export function useAdminRegisterMutation() {
 
   return useMutation({
     mutationFn: async (data: { email: string; name: string; password: string }) => {
-      const res = await fetch("http://localhost:8082/admin", {
+      const res = await fetch(process.env.NEXT_PUBLIC_SIGMA_AUTHENTICATION + "/admin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,7 +37,7 @@ export function useLoginMutation() {
 
   return useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
-      const res = await fetch("http://localhost:8082/admin/login", {
+      const res = await fetch(process.env.NEXT_PUBLIC_SIGMA_AUTHENTICATION + "/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export function useAdminQuery() {
     queryFn: async () => {
       const token = localStorage?.getItem('token');
 
-      const res = await fetch("http://localhost:8082/admin", {
+      const res = await fetch(process.env.NEXT_PUBLIC_SIGMA_AUTHENTICATION + "/admin", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -92,7 +92,7 @@ export function useUpdateAdminMutation() {
   return useMutation({
     mutationFn: async (newName: string) => {
       const token = localStorage?.getItem('token');
-      const res = await fetch("http://localhost:8082/admin", {
+      const res = await fetch(process.env.NEXT_PUBLIC_SIGMA_AUTHENTICATION + "/admin", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
