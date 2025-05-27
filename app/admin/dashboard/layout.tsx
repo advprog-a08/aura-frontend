@@ -7,7 +7,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { TableIcon as TableRestaurant, UtensilsCrossed, Menu, LogOut, Home, User } from "lucide-react"
+import { TableIcon as TableRestaurant, UtensilsCrossed, Menu, LogOut, Home, User, Receipt } from "lucide-react"
 import { useAdminQuery } from "../hooks"
 
 interface AdminLayoutProps {
@@ -33,12 +33,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: User,
     },
     {
-      name: "Table Management",
+      name: "Checkouts",
+      href: "/admin/dashboard/checkouts",
+      icon: Receipt,
+    },
+    {
+      name: "Tables",
       href: "/admin/dashboard/meja",
       icon: TableRestaurant,
     },
     {
-      name: "Menu Management",
+      name: "Menus",
       href: "/admin/dashboard/menu",
       icon: UtensilsCrossed,
     },
