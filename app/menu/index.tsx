@@ -6,19 +6,25 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import customFetch from "@/lib/fetch"
-import { Minus, Plus, Search, ShoppingCart, Star } from "lucide-react"
+import { Minus, Plus, Search, ShoppingCart, Star, Save } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { useDebouncedCallback } from 'use-debounce'
 import { BulkMenuResponse, MenuItem } from "./type"
+import { useCurrentOrderQuery, useUpdateOrderMutation } from "../pesanan/hooks"
+import { useToast } from "@/hooks/use-toast"
 
 export default function MenuModule() {
+    const { toast: hookToast } = useToast()
     const [isLoading, setIsLoading] = useState(true)
     const [menuItems, setMenuItems] = useState<MenuItem[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const [cart, setCart] = useState<{ id: string; quantity: number }[]>([])
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+    const { data: currentOrder, isLoading: orderLoading, error: orderError } = useCurrentOrderQuery()
+    const updateOrderMutation = useUpdateOrderMutation()
 
     const filteredItems = menuItems.filter(
         (item) =>
@@ -44,6 +50,19 @@ export default function MenuModule() {
 
         fetchMenu();
     }, [])
+    useEffect(() => {
+        if (currentOrder && currentOrder.items) {
+            const orderCart = currentOrder.items.map(item => ({
+                id: item.menuItemId,
+                quantity: item.quantity
+            }))
+            setCart(orderCart)
+            setHasUnsavedChanges(false)
+        } else if (orderError) {
+            setCart([])
+            setHasUnsavedChanges(false)
+        }
+    }, [currentOrder, orderError])
 
     const addToCart = useDebouncedCallback((itemId: string) => {
         const existingItem = cart.find((item) => item.id === itemId)
@@ -54,11 +73,13 @@ export default function MenuModule() {
             setCart([...cart, { id: itemId, quantity: 1 }])
         }
 
+        setHasUnsavedChanges(true)
+
         const item = menuItems.find((item) => item.id === itemId)
         if (item) {
             toast.success(`Added ${item.name} to your order!`)
         }
-    }, 500)
+    })
 
     const decreaseQuantity = useDebouncedCallback((itemId: string) => {
         const existingItem = cart.find((item) => item.id === itemId)
@@ -68,7 +89,35 @@ export default function MenuModule() {
         } else {
             setCart(cart.filter((item) => item.id !== itemId))
         }
-    }, 500)
+
+        setHasUnsavedChanges(true)
+    })
+
+    const saveOrder = async () => {
+        const orderData = {
+            items: cart.map(item => ({
+                menuItemId: item.id,
+                quantity: item.quantity
+            }))
+        }
+
+        updateOrderMutation.mutate(orderData, {
+            onSuccess: () => {
+                hookToast({
+                    title: "Order Saved",
+                    description: "Your order has been saved successfully.",
+                })
+                setHasUnsavedChanges(false)
+            },
+            onError: (error: any) => {
+                hookToast({
+                    title: "Save Failed",
+                    description: error.message || "Failed to save order",
+                    variant: "destructive",
+                })
+            }
+        })
+    }
 
     const getItemQuantity = (itemId: string) => {
         const item = cart.find((item) => item.id === itemId)
@@ -103,8 +152,19 @@ export default function MenuModule() {
                                 className="pl-8"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+                            />                        
                         </div>
+
+                        {hasUnsavedChanges && (
+                            <Button 
+                                onClick={saveOrder}
+                                disabled={updateOrderMutation.isPending || cart.length === 0}
+                                className="bg-blue-600 hover:bg-blue-700 flex gap-2 items-center"
+                            >
+                                <Save className="h-4 w-4" />
+                                <span>{updateOrderMutation.isPending ? "Saving..." : "Save Order"}</span>
+                            </Button>
+                        )}
 
                         <Button asChild className="bg-green-700 hover:bg-green-800 flex gap-2 items-center">
                             <Link href="/pesanan">
