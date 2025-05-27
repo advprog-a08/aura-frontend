@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Minus, Trash2, ArrowRight, Clock } from "lucide-react"
+import { Plus, Minus, Trash2, ArrowRight, Clock, Save } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +28,8 @@ export default function PesananPage() {
   const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [localOrder, setLocalOrder] = useState<Order | null>(null)
   
   // Fetch current order data
   const { data: currentOrder, isLoading, error } = useCurrentOrderQuery()
@@ -46,28 +48,64 @@ export default function PesananPage() {
     const date = new Date(dateString)
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
+  useEffect(() => {
+    if (currentOrder) {
+      setLocalOrder(currentOrder)
+      setHasUnsavedChanges(false)
+    }
+  }, [currentOrder])
 
   const updateQuantity = (item: OrderItem, newQuantity: number) => {
-    if (!currentOrder) return
+    if (!localOrder) return
 
-    const updatedItems = currentOrder.items.map(orderItem => {
+    const updatedItems = localOrder.items.map(orderItem => {
       if (orderItem.id === item.id) {
-        return { menuItemId: orderItem.menuItemId, quantity: newQuantity }
+        return { 
+          ...orderItem, 
+          quantity: newQuantity,
+          subtotal: orderItem.price * newQuantity
+        }
       }
-      return { menuItemId: orderItem.menuItemId, quantity: orderItem.quantity }
+      return orderItem
     })
 
-    updateOrderMutation.mutate({ items: updatedItems }, {
+    const updatedOrder = {
+      ...localOrder,
+      items: updatedItems,
+      total: updatedItems.reduce((sum, item) => sum + item.subtotal, 0)
+    }
+
+    setLocalOrder(updatedOrder)
+    setHasUnsavedChanges(true)
+  }
+
+  const saveChanges = () => {
+    if (!localOrder) return
+
+    const updateData = {
+      items: localOrder.items.map(item => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity
+      }))
+    }
+
+    updateOrderMutation.mutate(updateData, {
+      onSuccess: () => {
+        toast({
+          title: "Order Saved",
+          description: "Your order has been saved successfully.",
+        })
+        setHasUnsavedChanges(false)
+      },
       onError: (error: any) => {
         toast({
-          title: "Update Failed",
-          description: error.message || "Failed to update item quantity",
+          title: "Save Failed",
+          description: error.message || "Failed to save order",
           variant: "destructive",
         })
       }
     })
   }
-
   const increaseQuantity = (item: OrderItem) => {
     updateQuantity(item, item.quantity + 1)
   }
@@ -111,12 +149,11 @@ export default function PesananPage() {
   const handleProceedToCheckout = () => {
     setShowCheckoutConfirm(true)
   }
-
   const handleCheckoutConfirm = () => {
-    if (!currentOrder) return
+    if (!localOrder) return
 
     const updateData = {
-      items: currentOrder.items.map(item => ({
+      items: localOrder.items.map(item => ({
         menuItemId: item.menuItemId,
         quantity: item.quantity
       }))
@@ -169,19 +206,32 @@ export default function PesananPage() {
   }
 
   return (
-    <CustomerLayout>
+    <CustomerLayout>      
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-green-800 dark:text-green-400">My Orders</h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Manage your current order - Table {currentOrder?.nomorMeja}
-          </p>
-        </div>
-
-        {currentOrder && currentOrder.items.length > 0 ? (
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-green-800 dark:text-green-400">My Orders</h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Manage your current order - Table {currentOrder?.nomorMeja}
+              </p>
+            </div>
+            {hasUnsavedChanges && (
+              <Button 
+                onClick={saveChanges}
+                disabled={updateOrderMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700 flex gap-2 items-center"
+              >
+                <Save className="h-4 w-4" />
+                <span>{updateOrderMutation.isPending ? "Saving..." : "Save Changes"}</span>
+              </Button>
+            )}
+          </div>
+        </div>        
+        {localOrder && localOrder.items.length > 0 ? (
           <div className="grid md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
-              {currentOrder.items.map((item) => (
+              {localOrder.items.map((item) => (
                 <Card key={item.id} className="overflow-hidden">
                   <div className="flex flex-col sm:flex-row">
                     <div
@@ -204,13 +254,12 @@ export default function PesananPage() {
                         </Badge>
                       )}
 
-                      <div className="flex justify-between items-center mt-4">
-                        <div className="flex items-center gap-3">
+                      <div className="flex justify-between items-center mt-4">                        <div className="flex items-center gap-3">
                           <Button 
                             variant="outline" 
                             size="icon" 
                             onClick={() => decreaseQuantity(item)}
-                            disabled={updateOrderMutation.isPending}
+                            disabled={updateOrderMutation.isPending || removeItemMutation.isPending}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -219,7 +268,7 @@ export default function PesananPage() {
                             variant="outline" 
                             size="icon" 
                             onClick={() => increaseQuantity(item)}
-                            disabled={updateOrderMutation.isPending}
+                            disabled={updateOrderMutation.isPending || removeItemMutation.isPending}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -248,10 +297,9 @@ export default function PesananPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
+                </CardHeader>                <CardContent>
                   <div className="space-y-4">
-                    {currentOrder.items.map((item) => (
+                    {localOrder.items.map((item) => (
                       <div key={item.id} className="flex justify-between text-sm">
                         <span>
                           {item.menuItemName} x {item.quantity}
@@ -264,14 +312,14 @@ export default function PesananPage() {
 
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
-                      <span>{formatPrice(currentOrder.total)}</span>
+                      <span>{formatPrice(localOrder.total)}</span>
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
                   <Button
                     className="w-full bg-green-700 hover:bg-green-800"
-                    disabled={currentOrder.items.length === 0 || updateOrderMutation.isPending}
+                    disabled={localOrder.items.length === 0 || updateOrderMutation.isPending}
                     onClick={handleProceedToCheckout}
                   >
                     {updateOrderMutation.isPending ? "Processing..." : "Proceed to Checkout"}
