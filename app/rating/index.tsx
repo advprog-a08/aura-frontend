@@ -20,7 +20,7 @@ export default function RatingModule() {
 
     useEffect(() => {
         if (typeof window !== "undefined") {
-            setSessionId(localStorage.getItem("sessionId"));
+            setSessionId(localStorage.getItem("session_id"));
         }
     }, []);
 
