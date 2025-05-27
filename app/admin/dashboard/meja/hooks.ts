@@ -36,7 +36,12 @@ export function useEditMejaMutation() {
         },
         body: JSON.stringify({ nomorMeja }),
       })
-      if (!res.ok) throw new Error("Failed to update meja")
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to update meja");
+      }
+      
       return res.json()
     },
     onSuccess: () => {
@@ -58,7 +63,12 @@ export function useAddMejaMutation() {
         },
         body: JSON.stringify({ nomorMeja }),
       })
-      if (!res.ok) throw new Error("Failed to update meja")
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to add meja");
+      }
+      
       return res.json()
     },
     onSuccess: () => {

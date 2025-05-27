@@ -26,6 +26,8 @@ export default function MejaManagement() {
   const [selectedMeja, setSelectedMeja] = useState<Meja | null>(null)
   const [addNomorMeja, setAddNomorMeja] = useState("")
   const [editNomorMeja, setEditNomorMeja] = useState("")
+  const [addError, setAddError] = useState<string | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
 
   const openEditModal = (meja: Meja) => {
     setSelectedMeja(meja)
@@ -36,16 +38,26 @@ export default function MejaManagement() {
   const handleEditMeja = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedMeja) return
-    await editMejaMutation.mutateAsync({ id: selectedMeja.id, nomorMeja: editNomorMeja })
-    setEditModalOpen(false)
-    setSelectedMeja(null)
+    setEditError(null)
+    try {
+      await editMejaMutation.mutateAsync({ id: selectedMeja.id, nomorMeja: editNomorMeja })
+      setEditModalOpen(false)
+      setSelectedMeja(null)
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : "An unknown error occurred")
+    }
   }
 
   const handleAddMeja = async (e: React.FormEvent) => {
     e.preventDefault()
-    await addMejaMutation.mutateAsync({ nomorMeja: addNomorMeja })
-    setAddModalOpen(false)
-    setAddNomorMeja("")
+    setAddError(null)
+    try {
+      await addMejaMutation.mutateAsync({ nomorMeja: addNomorMeja })
+      setAddModalOpen(false)
+      setAddNomorMeja("")
+    } catch (error) {
+      setAddError(error instanceof Error ? error.message : "An unknown error occurred")
+    }
   }
 
   return (
@@ -100,8 +112,8 @@ export default function MejaManagement() {
       <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Table</DialogTitle>
-            <DialogDescription>Only the table number can be changed.</DialogDescription>
+            <DialogTitle>Add New Table</DialogTitle>
+            <DialogDescription>Enter a valid table number (e.g. A1, B2).</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAddMeja} className="space-y-4">
             <div className="space-y-2">
@@ -112,13 +124,14 @@ export default function MejaManagement() {
                 onChange={e => setAddNomorMeja(e.target.value)}
                 required
               />
+              {addError && <p className="text-sm font-medium text-red-500">{addError}</p>}
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setAddModalOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={addMejaMutation.isPending}>
-                {addMejaMutation.isPending ? "Adding..." : "Add Meja"}
+                {addMejaMutation.isPending ? "Adding..." : "Add Table"}
               </Button>
             </DialogFooter>
           </form>
@@ -140,6 +153,7 @@ export default function MejaManagement() {
                 onChange={e => setEditNomorMeja(e.target.value)}
                 required
               />
+              {editError && <p className="text-sm font-medium text-red-500">{editError}</p>}
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
