@@ -13,7 +13,7 @@ export function useMenuQuery() {
   return useQuery<Menu[], Error>({
     queryKey: ["menu-list"],
     queryFn: async () => {
-      const res = await fetch("http://localhost:8080/api/menus", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -30,7 +30,7 @@ export function useMenuMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, ...menu }: { id: string, name: string, description: string, imageUrl: string, quantity: number | null, price: number }) => {
-      const res = await fetch(`http://localhost:8080/api/menus/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(menu),
