@@ -20,7 +20,12 @@ export default function RatingModule() {
 
     useEffect(() => {
         if (typeof window !== "undefined") {
-            setSessionId(localStorage.getItem("session_id"));
+            if (!localStorage.getItem("session_id")) { 
+                window.location.href = "/";
+            }
+            else {
+                setSessionId(localStorage.getItem("session_id"));
+            }
         }
     }, []);
 
