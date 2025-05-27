@@ -9,7 +9,7 @@ import { useMutation } from "@tanstack/react-query"
 import { LogOut, Menu, ShoppingCart, Star } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface CustomerLayoutProps {
   children: React.ReactNode
@@ -44,6 +44,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mutation = useLogoutMutation();
+  const router = useRouter();
 
   // Update the navigation array to remove checkout from the navbar
   const navigation = [
@@ -67,6 +68,12 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   const handleLogout = () => {
     mutation.mutate();
   }
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("session_id") && (process.env.NEXT_PUBLIC_IS_DEV !== "true")) { 
+      router.push("/");
+    }
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
