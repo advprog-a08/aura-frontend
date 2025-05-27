@@ -16,7 +16,7 @@ export default function RatingPage() {
   const [error, setError] = useState<string | null>(null)
   const [userRatings, setUserRatings] = useState<UserRating[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const sessionId = localStorage.getItem("sessionId");
+  const sessionId = localStorage.getItem("session_id");
   const { toast } = useToast()
 
 
