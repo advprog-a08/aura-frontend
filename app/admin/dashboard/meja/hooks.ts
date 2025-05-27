@@ -44,3 +44,25 @@ export function useEditMejaMutation() {
     },
   })
 } 
+
+export function useAddMejaMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ nomorMeja }: { nomorMeja: string }) => {
+      const token = localStorage?.getItem('token')
+      const res = await fetch(`${process.env.NEXT_PUBLIC_OHIO_ORDER}/api/v1/meja`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ nomorMeja }),
+      })
+      if (!res.ok) throw new Error("Failed to update meja")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["meja-list"] })
+    },
+  })
+}

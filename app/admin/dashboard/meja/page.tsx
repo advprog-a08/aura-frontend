@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useMejaQuery, useEditMejaMutation } from "./hooks"
+import { useMejaQuery, useEditMejaMutation, useAddMejaMutation } from "./hooks"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,9 +19,12 @@ export default function MejaManagement() {
   const { data, isLoading, error } = useMejaQuery()
   const mejas: Meja[] = Array.isArray(data) ? data : []
   const editMejaMutation = useEditMejaMutation()
+  const addMejaMutation = useAddMejaMutation()
 
+  const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedMeja, setSelectedMeja] = useState<Meja | null>(null)
+  const [addNomorMeja, setAddNomorMeja] = useState("")
   const [editNomorMeja, setEditNomorMeja] = useState("")
 
   const openEditModal = (meja: Meja) => {
@@ -38,11 +41,23 @@ export default function MejaManagement() {
     setSelectedMeja(null)
   }
 
+  const handleAddMeja = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await addMejaMutation.mutateAsync({ nomorMeja: addNomorMeja })
+    setAddModalOpen(false)
+    setAddNomorMeja("")
+  }
+
   return (
     <div className="p-6">
       <div className="flex flex-col gap-2 mb-6">
         <h1 className="text-3xl font-bold text-green-800 dark:text-green-400">Table Management</h1>
         <p className="text-gray-600 dark:text-gray-300">All tables in your restaurant</p>
+        <div className="flex justify-end">
+          <Button onClick={() => setAddModalOpen(true)} className="bg-green-700 hover:bg-green-800">
+            Add Table
+          </Button>
+        </div>
       </div>
       <div className="grid gap-6 md:grid-cols-1">
         <div>
@@ -81,6 +96,34 @@ export default function MejaManagement() {
           </div>
         </div>
       </div>
+
+      <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Table</DialogTitle>
+            <DialogDescription>Only the table number can be changed.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddMeja} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="addNomorMeja">Table Number</Label>
+              <Input
+                id="addNomorMeja"
+                value={addNomorMeja}
+                onChange={e => setAddNomorMeja(e.target.value)}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={addMejaMutation.isPending}>
+                {addMejaMutation.isPending ? "Adding..." : "Add Meja"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent>
