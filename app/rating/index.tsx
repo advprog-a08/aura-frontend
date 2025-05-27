@@ -4,9 +4,9 @@ import CustomerLayout from "@/components/customer-layout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search, Star, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { ApiResponse, MenuItem, RatingResponse, UserRating } from "./interface"
 
 
@@ -24,9 +24,6 @@ export default function RatingModule() {
         }
     }, []);
 
-    const { toast } = useToast()
-
-
     const fetchUserRating = async (menuId: string): Promise<{ rating: number; ratingId?: string }> => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_MEWING_MENU}/api/ratings/menu/${menuId}/me`, {
@@ -39,7 +36,7 @@ export default function RatingModule() {
                 if (response.status === 404) {
                     return { rating: 0 }
                 }
-                throw new Error(`HTTP error! status: ${response.status}`)
+                toast.error(`Failed to fetch rating for menu ${menuId}: ${response.statusText}`)
             }
 
             const result: RatingResponse = await response.json()
@@ -89,11 +86,7 @@ export default function RatingModule() {
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Failed to fetch menu data'
                 setError(errorMessage)
-                toast({
-                    title: "Error",
-                    description: errorMessage,
-                    variant: "destructive",
-                })
+                toast.error(errorMessage)
             } finally {
                 setLoading(false)
             }
@@ -169,17 +162,9 @@ export default function RatingModule() {
 
                 if (item) {
                     if (existingRating && existingRating.ratingId) {
-                        toast({
-                            title: "Rating Updated",
-                            description: `Your rating for "${item.name}" has been updated to ${rating} stars.`,
-                            variant: "default",
-                        })
+                        toast.success("Rating Updated")
                     } else {
-                        toast({
-                            title: "Rating Submitted",
-                            description: `Thank you for rating "${item.name}" ${rating} stars!`,
-                            variant: "default",
-                        })
+                        toast.success(`Thank you for rating "${item.name}"!`)
                     }
                 }
             } else {
@@ -200,11 +185,7 @@ export default function RatingModule() {
             }
 
             const errorMessage = err instanceof Error ? err.message : 'Failed to submit rating'
-            toast({
-                title: "Error",
-                description: errorMessage,
-                variant: "destructive",
-            })
+            toast.error(errorMessage)
         }
     }
 
@@ -232,11 +213,7 @@ export default function RatingModule() {
             }
 
             if (item) {
-                toast({
-                    title: "Rating Removed",
-                    description: `Your rating for "${item.name}" has been successfully removed.`,
-                    variant: "default",
-                })
+                toast.success(`Rating for "${item.name}" removed successfully`)
             }
         } catch (err) {
             console.error('Failed to remove rating:', err)
@@ -251,11 +228,7 @@ export default function RatingModule() {
             }
 
             const errorMessage = err instanceof Error ? err.message : 'Failed to remove rating'
-            toast({
-                title: "Error",
-                description: errorMessage,
-                variant: "destructive",
-            })
+            toast.error(errorMessage)
         }
     }
 
