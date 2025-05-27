@@ -20,7 +20,16 @@ import {
 } from "@/components/ui/alert-dialog"
 import CustomerLayout from "@/components/customer-layout"
 import { useToast } from "@/hooks/use-toast"
-import { useCurrentOrderQuery, useUpdateOrderMutation, useRemoveOrderItemMutation, type Order, type OrderItem } from "./hooks"
+import { 
+  useCurrentOrderQuery, 
+  useUpdateOrderMutation, 
+  useRemoveOrderItemMutation, 
+  useCurrentCheckoutQuery,
+  useCreateCheckoutMutation,
+  type Order, 
+  type OrderItem 
+} from "./hooks"
+import customFetch from "@/lib/fetch";
 
 export default function PesananPage() {
   const { toast } = useToast()
@@ -30,11 +39,12 @@ export default function PesananPage() {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [localOrder, setLocalOrder] = useState<Order | null>(null)
-  
-  // Fetch current order data
+    // Fetch current order data
   const { data: currentOrder, isLoading, error } = useCurrentOrderQuery()
   const updateOrderMutation = useUpdateOrderMutation()
   const removeItemMutation = useRemoveOrderItemMutation()
+  // Fetch current checkout data
+  const createCheckoutMutation = useCreateCheckoutMutation()
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -145,39 +155,110 @@ export default function PesananPage() {
       }
     })
   }
-
+  
   const handleProceedToCheckout = () => {
     setShowCheckoutConfirm(true)
   }
-  const handleCheckoutConfirm = () => {
+
+  const handleCheckoutConfirm = async () => {
     if (!localOrder) return
 
-    const updateData = {
-      items: localOrder.items.map(item => ({
-        menuItemId: item.menuItemId,
-        quantity: item.quantity
-      }))
-    }
+    try {
+      // First update the order with any local changes
+      const updateData = {
+        items: localOrder.items.map(item => ({
+          menuItemId: item.menuItemId,
+          quantity: item.quantity
+        }))
+      }
 
-    updateOrderMutation.mutate(updateData, {
-      onSuccess: () => {
+      // Update the order first
+      await new Promise((resolve, reject) => {
+        updateOrderMutation.mutate(updateData, {
+          onSuccess: resolve,
+          onError: reject
+        })
+      })
+
+      // Now check if checkout already exists
+      const sessionId = localStorage.getItem("session_id")
+      if (!sessionId) {
+        throw new Error("No session found")
+      }
+
+      try {
+        const existingCheckout = await customFetch("/api/checkout/me", {
+          method: "GET",
+          headers: {
+            "X-Session-Id": sessionId,
+          },
+        }, "ohio_order")
+
+        if (!existingCheckout || !existingCheckout.id) {
+          createCheckoutMutation.mutate(undefined, {
+            onSuccess: () => {
+              toast({
+                title: "Checkout Created",
+                description: "Proceeding to checkout...",
+              })
+              router.push("/checkout")
+            },
+            onError: (error: any) => {
+              toast({
+                title: "Checkout Failed",
+                description: error.message || "Failed to create checkout",
+                variant: "destructive",
+              })
+            },
+            onSettled: () => {
+              setShowCheckoutConfirm(false)
+            }
+          })
+        }
+
+        // If we get here, checkout already exists
         toast({
-          title: "Order Updated",
-          description: "Your order has been updated successfully.",
+          title: "Proceeding to Checkout",
+          description: "Taking you to your existing checkout...",
         })
         router.push("/checkout")
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Checkout Failed",
-          description: error.message || "Failed to proceed to checkout",
-          variant: "destructive",
-        })
-      },
-      onSettled: () => {
         setShowCheckoutConfirm(false)
+
+      } catch (checkoutError: any) {
+        if (checkoutError.status === 400 || checkoutError.status === 404) {
+          createCheckoutMutation.mutate(undefined, {
+            onSuccess: () => {
+              toast({
+                title: "Checkout Created",
+                description: "Proceeding to checkout...",
+              })
+              router.push("/checkout")
+            },
+            onError: (error: any) => {
+              toast({
+                title: "Checkout Failed",
+                description: error.message || "Failed to create checkout",
+                variant: "destructive",
+              })
+            },
+            onSettled: () => {
+              setShowCheckoutConfirm(false)
+            }
+          })
+        } else {
+          // Some other error occurred
+          throw checkoutError
+        }
       }
-    })
+
+    } catch (error: any) {
+      toast({
+        title: "Checkout Failed",
+        description: error.message || "Failed to proceed to checkout",
+        variant: "destructive",
+      })
+      setShowCheckoutConfirm(false)
+    }
   }
 
   if (isLoading) {
@@ -206,8 +287,10 @@ export default function PesananPage() {
   }
 
   return (
-    <CustomerLayout>      
+    <CustomerLayout>
+
       <div className="container mx-auto p-6">
+        <div></div>
         <div className="mb-6">
           <div className="flex justify-between items-center">
             <div>
@@ -215,8 +298,7 @@ export default function PesananPage() {
               <p className="text-gray-600 dark:text-gray-300">
                 Manage your current order - Table {currentOrder?.nomorMeja}
               </p>
-            </div>
-            {hasUnsavedChanges && (
+            </div>            {hasUnsavedChanges && !currentOrder?.locked && (
               <Button 
                 onClick={saveChanges}
                 disabled={updateOrderMutation.isPending}
@@ -252,14 +334,20 @@ export default function PesananPage() {
                         <Badge variant="outline" className="mt-2">
                           {item.menuItemCategory}
                         </Badge>
-                      )}
-
-                      <div className="flex justify-between items-center mt-4">                        <div className="flex items-center gap-3">
+                      )}                      <div className="flex justify-between items-center mt-4">
+                        {currentOrder?.locked ? (
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                              Order Locked - Cannot Edit
+                            </Badge>
+                            <span className="font-medium">Quantity: {item.quantity}</span>
+                          </div>
+                        ) : (                        <div className="flex items-center gap-3">
                           <Button 
                             variant="outline" 
                             size="icon" 
                             onClick={() => decreaseQuantity(item)}
-                            disabled={updateOrderMutation.isPending || removeItemMutation.isPending}
+                            disabled={updateOrderMutation.isPending || removeItemMutation.isPending || currentOrder?.locked}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -268,23 +356,26 @@ export default function PesananPage() {
                             variant="outline" 
                             size="icon" 
                             onClick={() => increaseQuantity(item)}
-                            disabled={updateOrderMutation.isPending || removeItemMutation.isPending}
+                            disabled={updateOrderMutation.isPending || removeItemMutation.isPending || currentOrder?.locked}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
+                        )}
 
                         <div className="flex items-center gap-4">
                           <p className="font-bold">{formatPrice(item.subtotal)}</p>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteClick(item.id)}
-                            disabled={removeItemMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {!currentOrder?.locked && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleDeleteClick(item.id)}
+                              disabled={removeItemMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -348,12 +439,11 @@ export default function PesananPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogCancel>Cancel</AlertDialogCancel>              <AlertDialogAction 
                 onClick={handleCheckoutConfirm}
-                disabled={updateOrderMutation.isPending}
+                disabled={updateOrderMutation.isPending || createCheckoutMutation.isPending}
               >
-                {updateOrderMutation.isPending ? "Processing..." : "Proceed"}
+                {updateOrderMutation.isPending || createCheckoutMutation.isPending ? "Processing..." : "Proceed"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

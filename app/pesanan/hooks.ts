@@ -21,6 +21,7 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
+  locked: boolean;
   total: number;
 }
 
@@ -29,6 +30,12 @@ export interface UpdateOrderRequest {
     menuItemId: string;
     quantity: number;
   }[];
+}
+
+export interface Checkout {
+  id: string;
+  state: "DRAFT" | "ORDERED" | "PREPARING" | "READY" | "COMPLETED" | "DELETE";
+  message: string;
 }
 
 // Hook to get current order by table session
@@ -105,6 +112,95 @@ export function useRemoveOrderItemMutation() {
       }, "ohio_order");
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["current-order"] });
+    },
+  });
+}
+
+
+export function useCurrentCheckoutQuery() {
+  return useQuery({
+    queryKey: ["current-checkout"],
+    queryFn: async (): Promise<Checkout | null> => {
+      const sessionId = localStorage.getItem("session_id");
+
+      if (!sessionId) {
+        throw new Error("No session found");
+      }
+
+      try {
+        const data = await customFetch("/api/checkout/me", {
+          method: "GET",
+          headers: {
+            "X-Session-Id": sessionId,
+          },
+        }, "ohio_order");
+
+        if (!data) {
+          return null; // No checkout found
+        }
+
+        return data;
+      } catch (error: any) {
+        if (error.status === 400 || error.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    retry: false,
+  });
+}
+
+// Hook to create checkout
+export function useCreateCheckoutMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<Checkout> => {
+      const sessionId = localStorage.getItem("session_id");
+
+      if (!sessionId) {
+        throw new Error("No session found");
+      }
+
+      const result = await customFetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "X-Session-Id": sessionId,
+        },
+      }, "ohio_order");
+
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["current-checkout"] });
+      queryClient.invalidateQueries({ queryKey: ["current-order"] });
+    },
+  });
+}
+
+// Hook to cancel checkout
+export function useCancelCheckoutMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      const sessionId = localStorage.getItem("session_id");
+
+      if (!sessionId) {
+        throw new Error("No session found");
+      }
+
+      await customFetch("/api/checkout/me", {
+        method: "DELETE",
+        headers: {
+          "X-Session-Id": sessionId,
+        },
+      }, "ohio_order");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["current-checkout"] });
       queryClient.invalidateQueries({ queryKey: ["current-order"] });
     },
   });
