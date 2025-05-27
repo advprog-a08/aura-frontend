@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import MenuModule from ".";
 
 export default async function MenuPage() {
-  return <MenuModule />
+  return (
+    <Suspense>
+      <MenuModule />
+    </Suspense>
+  )
 }
