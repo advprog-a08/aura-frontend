@@ -1,5 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
+export interface MenuCategories {
+  id: string
+  name: string
+  description: string
+  menus: Menu[]
+}
+
 export interface Menu {
   id: string
   name: string
@@ -47,7 +54,7 @@ export function useMenuMutation() {
 export function useCreateMenu() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (menu: { name: string, description: string, imageUrl: string, quantity: number | null, price: number }) => {
+    mutationFn: async (menu: { name: string, description: string, imageUrl: string, price: number, quantity: number }) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

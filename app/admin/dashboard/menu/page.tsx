@@ -17,14 +17,18 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { uploadFile } from "@/lib/s3"
-import { Pencil, Plus, Star, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import { useCreateMenu, useDeleteMutation, useMenuMutation, useMenuQuery } from "./hooks"
 
 export default function MenuManagement() {
   const { data, isLoading, error } = useMenuQuery()
+  const router = useRouter();
+
   const menuItems = Array.isArray(data) ? data : []
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [addItem, setAddItem] = useState<any>({
@@ -45,37 +49,40 @@ export default function MenuManagement() {
     id: "",
     quantity: null,
   })
+
+  const [currentFile, setCurrentFile] = useState<File | null>();
   const menuMutation = useMenuMutation()
   const createMenu = useCreateMenu()
   const deleteMutation = useDeleteMutation()
+  
 
   const handleAddItem = async () => {
-    console.log("Adding item:", addItem);
-    
     if (!addItem.name || !addItem.description || !addItem.price) {
       toast.error("Please fill in all required fields.")
       return
     }
 
     // Upload IMage to S3
-    const url = await uploadFile(addItem.imageFile, `menu/${addItem.name.replace(/\s+/g, '-').toLowerCase()}/${Date.now()}`, 'rizzserve-menu')
-
-    console.log(url);
-    
+    let url = ''
+    if (currentFile) {
+      url = await uploadFile(currentFile, `menu/${addItem.name.replace(/\s+/g, '-').toLowerCase()}/${Date.now()}`, 'rizzserve-menu')
+    }
 
     createMenu.mutate(
       {
         name: addItem.name,
         description: addItem.description,
-        imageUrl: url || '',
-        quantity: addItem.quantity ?? null,
+        imageUrl: url || 'https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=556,505',
         price: parseFloat(addItem.price),
+        quantity: addItem.quantity ?? null,
       },
       {
         onSuccess: (data) => {
           setIsAddDialogOpen(false)
           resetAddForm()
           toast.success("Menu Item Added")
+
+          router.refresh()
         },
         onError: (error: any) => {
           toast.error("Add Failed")
@@ -91,16 +98,16 @@ export default function MenuManagement() {
     }
 
     // Upload Image to S3 if it exists
-    const url = await currentItem.imageFile
-      ? await uploadFile(currentItem.imageFile, `menu/${currentItem.name.replace(/\s+/g, '-').toLowerCase()}/${Date.now()}`, 'rizzserve-menu')
-      : "";
+    const url = currentFile
+      ? await uploadFile(currentFile, `menu/${currentItem.name.replace(/\s+/g, '-').toLowerCase()}/${Date.now()}`, 'rizzserve-menu')
+      : undefined;
 
     menuMutation.mutate(
       {
         id: currentItem.id,
         name: currentItem.name,
         description: currentItem.description,
-        imageUrl: url || '',
+        imageUrl: url || 'https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&resize=556,505',
         quantity: currentItem.quantity ?? null,
         price: parseFloat(currentItem.price),
       },
@@ -109,6 +116,7 @@ export default function MenuManagement() {
           setIsEditDialogOpen(false)
           resetForm()
           toast.success("Menu Item Updated")
+          router.refresh()
         },
         onError: (error: any) => {
           toast.error("Update Failed")
@@ -121,6 +129,8 @@ export default function MenuManagement() {
     deleteMutation.mutate(id, {
       onSuccess: () => {
         toast.success("Menu Item Deleted")
+
+        router.refresh()
       },
       onError: (error: any) => {
         toast.error("Delete Failed");
@@ -236,12 +246,9 @@ export default function MenuManagement() {
                   <Label htmlFor="image-file">Image File (Optional)</Label>
                   <FileInput
                     onFileChange={(file) => {
-                      setAddItem({
-                        ...addItem,
-                        imageFile: file,
-                      })
+                      setCurrentFile(file)
                     }}
-                    file={addItem.imageFile}
+                    file={currentFile as File}
                   />
                 </div>
               </div>
@@ -271,22 +278,17 @@ export default function MenuManagement() {
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Price</TableHead>
-                    <TableHead>Rating</TableHead>
+                    <TableHead>Quantity</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {menuItems.map((item) => (
+                  {menuItems.length > 0 ? menuItems.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell className="max-w-xs truncate">{item.description}</TableCell>
                       <TableCell>{formatPrice(item.price)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          <span>5.0</span>
-                        </div>
-                      </TableCell>
+                      <TableCell className={`${item.quantity! > 0 ? "text-green-500" : "text-red-400"}`}>{item.quantity ?? 0}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" size="icon" onClick={() => openEditDialog(item)}>
@@ -300,7 +302,11 @@ export default function MenuManagement() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                      <p className="text-center flex justify-center w-full text-neutral-500 mt-4">
+                        No Menu Available
+                      </p>
+                  )}
                 </TableBody>
               </Table>
             )}
@@ -310,7 +316,7 @@ export default function MenuManagement() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[500px] p-0 max-h-[90vh] overflow-auto">
           {/* Image header if available */}
           {currentItem.image && (
             <img
@@ -365,13 +371,10 @@ export default function MenuManagement() {
                 <Label htmlFor="edit-image">Image File (Optional)</Label>
                 <FileInput
                   onFileChange={(file) => {
-                    setCurrentItem({
-                      ...currentItem,
-                      imageFile: file,
-                    })
+                    setCurrentFile(file)
                   }
                   }
-                  file={currentItem.imageFile}
+                  file={currentFile as File}
                 />
               </div>
             </div>
