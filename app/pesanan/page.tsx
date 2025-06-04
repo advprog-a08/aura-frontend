@@ -54,10 +54,6 @@ export default function PesananPage() {
     }).format(price)
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  }
   useEffect(() => {
     if (currentOrder) {
       setLocalOrder(currentOrder)
@@ -294,7 +290,6 @@ export default function PesananPage() {
               <Button 
                 onClick={saveChanges}
                 disabled={updateOrderMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700 flex gap-2 items-center"
               >
                 <Save className="h-4 w-4" />
                 <span>{updateOrderMutation.isPending ? "Saving..." : "Save Changes"}</span>
@@ -309,9 +304,9 @@ export default function PesananPage() {
                 <Card key={item.id} className="overflow-hidden">
                   <div className="flex flex-col sm:flex-row">
                     <div
-                      className="h-32 sm:w-32 bg-cover bg-center"
+                      className="h-40 sm:w-32 bg-cover bg-center"
                       style={{
-                        backgroundImage: "url(/placeholder.svg?height=200&width=200)",
+                        backgroundImage: `url(https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg)`,
                       }}
                     />
                     <div className="flex-1 p-4">

@@ -1,58 +1,72 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TableIcon as TableRestaurant, UtensilsCrossed, ShoppingCart } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ShoppingCart, TableIcon as TableRestaurant, UtensilsCrossed } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useCheckoutsQuery } from "../hooks"
+import { Meja } from "./meja"
+import { useMejaQuery } from "./meja/hooks"
+import { Menu, useMenuQuery } from "./menu/hooks"
+
+interface Order {
+  checkout: {
+    id: string,
+    state: string,
+    message: string
+  },
+  order: {
+    id: string,
+    mejaId: string,
+    nomorMeja: string,
+    items: {
+      id: string,
+      menuItemId: string,
+      menuItemName: string,
+      menuItemDescription: string,
+      menuItemCategory: string,
+      price: number,
+      quantity: number,
+      subtotal: number
+    }[],
+    locked: true,
+    total: number,
+    createdAt: string,
+  }
+}
 
 export default function AdminDashboard() {
   const router = useRouter()
 
+  const { data: mejaData, isLoading, error } = useMejaQuery();
+  const mejas: Meja[] = Array.isArray(mejaData) ? mejaData : []
+
+  const { data: menuData } = useMenuQuery();
+  const menus: Menu[] = Array.isArray(menuData) ? menuData : []
+  
+  const { data: orderData } = useCheckoutsQuery();
+  const orders: Order[] = Array.isArray(orderData) ? orderData : []
+
   // Mock data for dashboard
   const summaryData = {
-    totalMeja: 15,
-    totalMenuItems: 42,
-    activeCoupons: 8,
-    pendingOrders: 3,
+    totalMeja: mejas.length,
+    totalMenuItems: menus.length,
+    pendingOrders: orders.length,
   }
 
-  // Mock data for recent orders
-  const recentOrders = [
-    {
-      id: 1001,
-      tableNumber: "A3",
-      items: 4,
-      total: 120000,
-      status: "Pending",
-      time: "10 minutes ago",
-    },
-    {
-      id: 1002,
-      tableNumber: "B2",
-      items: 2,
-      total: 75000,
-      status: "Completed",
-      time: "25 minutes ago",
-    },
-    {
-      id: 1003,
-      tableNumber: "C5",
-      items: 6,
-      total: 185000,
-      status: "Pending",
-      time: "32 minutes ago",
-    },
-    {
-      id: 1004,
-      tableNumber: "A1",
-      items: 3,
-      total: 95000,
-      status: "Completed",
-      time: "45 minutes ago",
-    },
-  ]
+  const recentOrders = orders.map((order) => ({
+    id: order.order.id,
+    tableNumber: order.order.nomorMeja,
+    items: order.order.items.length,
+    total: order.order.total,
+    status: order.checkout.state,
+    time: new Date(order.order.createdAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+  })).slice(0, 5)
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -153,16 +167,15 @@ export default function AdminDashboard() {
                           {order.status}
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        View
-                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
-              <Button variant="outline" className="w-full mt-4">
-                View All Orders
-              </Button>
+              <Link href={'/admin/dashboard/checkouts'}>
+                <Button variant="outline" className="w-full mt-4">
+                  View All Orders
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

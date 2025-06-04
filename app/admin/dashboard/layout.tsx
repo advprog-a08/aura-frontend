@@ -7,7 +7,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { TableIcon as TableRestaurant, UtensilsCrossed, Menu, LogOut, Home, User, Receipt } from "lucide-react"
+import { TableIcon as TableRestaurant, UtensilsCrossed, Menu, LogOut, Home, User, Receipt, ChefHat } from "lucide-react"
 import { useAdminQuery } from "../hooks"
 
 interface AdminLayoutProps {
@@ -116,7 +116,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">
-                <Menu className="h-5 w-5" />
+                <ChefHat className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">

@@ -10,7 +10,7 @@ import type React from "react"
 import { useState } from "react"
 import { useAddMejaMutation, useEditMejaMutation, useMejaQuery } from "./hooks"
 
-interface Meja {
+export interface Meja {
     id: string
     nomorMeja: string
     status: string

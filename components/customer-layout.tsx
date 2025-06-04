@@ -6,7 +6,7 @@ import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useMutation } from "@tanstack/react-query"
-import { LogOut, Menu, ShoppingCart, Star } from "lucide-react"
+import { ChefHat, LogOut, Menu, ShoppingCart, Star } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -134,7 +134,7 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon">
-                  <Menu className="h-5 w-5" />
+                  <ChefHat className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-64 p-0">

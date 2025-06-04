@@ -86,11 +86,16 @@ export default function MenuModule() {
                         return !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase())
                     })
 
-
                     setMenuItems(filteredItems)
+
+                    if (searchQuery) {
+                        setTotalItems(filteredItems.length)
+                    }
+                    else {
+                        setTotalItems(response.data.length) // Total items without search filter
+                    }
+
                     // IMPORTANT: API must return total count of matching items
-                    // Adjust based on your API response structure (e.g., response.meta.total or response.total)
-                    setTotalItems(response.data.length || response.total || response.data.length)
                     if (!response.data.length && !response.total) {
                         console.warn("API response for menu items does not include total count. Pagination might be inaccurate if data.length is less than ITEMS_PER_PAGE but more pages exist.");
                     }
@@ -249,7 +254,6 @@ export default function MenuModule() {
                             <Button
                                 onClick={saveOrder}
                                 disabled={updateOrderMutation.isPending || cart.length === 0}
-                                className="bg-blue-600 hover:bg-blue-700 flex gap-2 items-center"
                             >
                                 <Save className="h-4 w-4" />
                                 <span>{updateOrderMutation.isPending || orderLoading ? "Saving..." : "Save Order"}</span>
