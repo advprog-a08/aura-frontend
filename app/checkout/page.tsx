@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import CustomerLayout from "@/components/customer-layout"
+import CustomerLayout, { useLogoutMutation } from "@/components/customer-layout"
 import { useToast } from "@/hooks/use-toast"
 import { 
   useCurrentOrderQuery, 
@@ -36,6 +36,7 @@ export default function CheckoutPage() {
   const { data: currentOrder, isLoading: orderLoading, error: orderError } = useCurrentOrderQuery()
   const { data: currentCheckout, isLoading: checkoutLoading, error: checkoutError } = useCurrentCheckoutQuery()
   const cancelCheckoutMutation = useCancelCheckoutMutation()
+  const logoutMutation = useLogoutMutation()
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -67,9 +68,7 @@ export default function CheckoutPage() {
           description: "Your order has been cancelled. You will be logged out.",
         })
         
-        // Clear session and redirect to home
-        localStorage.removeItem("session_id")
-        router.push("/")
+        logoutMutation.mutate()
       },
       onError: (error: any) => {
         toast({

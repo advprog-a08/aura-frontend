@@ -172,14 +172,6 @@ export default function PesananPage() {
         }))
       }
 
-      // Update the order first
-      await new Promise((resolve, reject) => {
-        updateOrderMutation.mutate(updateData, {
-          onSuccess: resolve,
-          onError: reject
-        })
-      })
-
       // Now check if checkout already exists
       const sessionId = localStorage.getItem("session_id")
       if (!sessionId) {
