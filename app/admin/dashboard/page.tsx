@@ -86,7 +86,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg font-medium">Tables</CardTitle>
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mt-6">
-          <Card className="md:col-span-2 bg-white dark:bg-gray-800 shadow-md">
+          <Card className="md:col-span-3 bg-white dark:bg-gray-800 shadow-md hover">
             <CardHeader>
               <CardTitle>Recent Orders</CardTitle>
             </CardHeader>
