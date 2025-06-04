@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Pencil } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type React from "react"
@@ -30,6 +31,9 @@ export default function MejaManagementModule() {
     const [selectedMeja, setSelectedMeja] = useState<Meja | null>(null)
     const [addNomorMeja, setAddNomorMeja] = useState("")
     const [editNomorMeja, setEditNomorMeja] = useState("")
+    const [editStatusMeja, setEditStatusMeja] = useState<"TERSEDIA" | "TERISI">("TERSEDIA");
+
+
     const [addError, setAddError] = useState<string | null>(null)
     const [editError, setEditError] = useState<string | null>(null)
 
@@ -44,7 +48,7 @@ export default function MejaManagementModule() {
         if (!selectedMeja) return
         setEditError(null)
         try {
-            await editMejaMutation.mutateAsync({ id: selectedMeja.id, nomorMeja: editNomorMeja })
+            await editMejaMutation.mutateAsync({ id: selectedMeja.id, nomorMeja: editNomorMeja, status: editStatusMeja })
             setEditModalOpen(false)
             setSelectedMeja(null)
 
@@ -167,7 +171,19 @@ export default function MejaManagementModule() {
                         </div>
                         <div className="space-y-2">
                             <Label>Status</Label>
-                            <Input value={selectedMeja?.status || ""} disabled readOnly />
+                            <Select
+                                defaultValue={selectedMeja?.status}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="TERSEDIA">TERSEDIA</SelectItem>
+                                        <SelectItem value="TERISI">TERISI</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)}>

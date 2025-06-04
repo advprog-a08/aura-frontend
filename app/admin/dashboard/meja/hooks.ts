@@ -26,7 +26,7 @@ export function useMejaQuery() {
 export function useEditMejaMutation() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, nomorMeja }: { id: string; nomorMeja: string }) => {
+    mutationFn: async ({ id, nomorMeja, status }: { id: string; nomorMeja: string, status: "TERSEDIA" | "TERISI" }) => {
       const token = localStorage?.getItem('token')
       const res = await fetch(`${process.env.NEXT_PUBLIC_OHIO_ORDER}/api/v1/meja/${id}`, {
         method: "PUT",
@@ -34,7 +34,7 @@ export function useEditMejaMutation() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ nomorMeja }),
+        body: JSON.stringify({ nomorMeja, status }),
       })
       
       if (!res.ok) {
