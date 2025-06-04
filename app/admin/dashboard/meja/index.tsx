@@ -18,7 +18,9 @@ export interface Meja {
 
 export default function MejaManagementModule() {
     const { data, isLoading, error } = useMejaQuery()
-    const mejas: Meja[] = Array.isArray(data) ? data.sort() : []
+    const mejas: Meja[] = Array.isArray(data) ? data.sort(
+        (a, b) => a.status.localeCompare(b.status)
+    ) : []
     const editMejaMutation = useEditMejaMutation()
     const addMejaMutation = useAddMejaMutation()
     const router = useRouter();
