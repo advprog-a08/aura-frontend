@@ -1,3 +1,4 @@
+// interface.ts
 export interface MenuItem {
   id: string
   name: string
@@ -12,6 +13,9 @@ export interface ApiResponse {
   success: boolean
   message: string
   data: MenuItem[]
+  total?: number // Added for pagination
+  page?: number
+  limit?: number
 }
 
 export interface UserRating {
@@ -29,4 +33,14 @@ export interface RatingResponse {
     rating: number
     createdAt: string
   } | null
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean
+  message: string
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
 }
