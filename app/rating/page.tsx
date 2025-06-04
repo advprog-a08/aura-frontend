@@ -1,11 +1,10 @@
-
 import { Suspense } from 'react'
 import { MenuItem, ApiResponse } from './interface'
 import CustomerLayout from "@/components/customer-layout"
 import { Loader2 } from "lucide-react"
 import RatingModule from '.'
 
-async function getMenuItems(page: number = 1, limit: number = 10, search?: string): Promise<{
+async function getMenuItems(page: number = 1, limit: number = 5, search?: string): Promise<{
   items: MenuItem[]
   total: number
   hasMore: boolean
@@ -20,9 +19,17 @@ async function getMenuItems(page: number = 1, limit: number = 10, search?: strin
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus?${params}`,
       {
-        cache: 'no-store' // For real-time data, use 'force-cache' for static data
+        cache: 'no-store' 
       }
     )
+
+    if (response.status === 404) {
+      return {
+        items: [],
+        total: 0,
+        hasMore: false
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -41,7 +48,11 @@ async function getMenuItems(page: number = 1, limit: number = 10, search?: strin
     }
   } catch (error) {
     console.error('Failed to fetch menu items:', error)
-    throw error
+    return {
+      items: [],
+      total: 0,
+      hasMore: false
+    }
   }
 }
 
@@ -52,41 +63,51 @@ interface RatingPageProps {
   }>
 }
 
-export default async function RatingPage({ searchParams }: RatingPageProps) {
-  const params = await searchParams
-  const page = parseInt(params.page || '1')
-  const search = params.search
-
+async function getAllMenuItems(search?: string): Promise<{
+  items: MenuItem[]
+  total: number
+}> {
   try {
-    const { items, total, hasMore } = await getMenuItems(page, 10, search)
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
 
-    return (
-      <CustomerLayout>
-        <Suspense fallback={<LoadingState />}>
-          <RatingModule 
-            initialItems={items}
-            initialTotal={total}
-            initialHasMore={hasMore}
-            currentPage={page}
-            searchQuery={search || ''}
-          />
-        </Suspense>
-      </CustomerLayout>
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus?${params}`,
+      { cache: 'no-store' }
     )
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+
+    const result = await response.json()
+    return {
+      items: result.success ? result.data : [],
+      total: result.success ? result.data.length : 0
+    }
   } catch (error) {
-    return (
-      <CustomerLayout>
-        <div className="container mx-auto p-6">
-          <div className="p-8 text-center bg-red-50 rounded-lg">
-            <p className="text-red-500 mb-4">Failed to load menu items</p>
-            <p className="text-sm text-gray-600">Please try refreshing the page</p>
-          </div>
-        </div>
-      </CustomerLayout>
-    )
+    console.error('Failed to fetch menu items:', error)
+    return { items: [], total: 0 }
   }
 }
 
+export default async function RatingPage({ searchParams }: RatingPageProps) {
+  const params = await searchParams
+  const search = params.search
+  const { items, total } = await getAllMenuItems(search)
+
+  return (
+    <CustomerLayout>
+      <Suspense fallback={<LoadingState />}>
+        <RatingModule 
+          allItems={items} 
+          initialTotal={total}
+          currentPage={parseInt(params.page || '1')}
+          searchQuery={search || ''}
+          itemsPerPage={5}
+        />
+      </Suspense>
+    </CustomerLayout>
+  )
+}
 function LoadingState() {
   return (
     <div className="container mx-auto p-6">

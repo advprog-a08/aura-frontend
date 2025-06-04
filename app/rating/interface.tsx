@@ -1,4 +1,3 @@
-// interface.ts
 export interface MenuItem {
   id: string
   name: string
@@ -13,7 +12,7 @@ export interface ApiResponse {
   success: boolean
   message: string
   data: MenuItem[]
-  total?: number // Added for pagination
+  total?: number 
   page?: number
   limit?: number
 }
