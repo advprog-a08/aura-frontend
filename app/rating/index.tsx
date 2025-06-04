@@ -305,7 +305,7 @@ export default function RatingModule({
                     e.currentTarget.src =
                       "https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg";
                   }}
-                  className="h-32 sm:w-32 bg-cover bg-center"
+                  className="h-32 sm:w-32 bg-cover bg-center object-cover"
                 />
                 <div className="flex-1 p-4">
                   <div className="flex flex-col sm:flex-row justify-between gap-4">
