@@ -13,7 +13,7 @@ export function useLoginMutation() {
 
       if (!resMeja.ok) {
         const err = await resMeja.json();
-        toast.error(err.message || "Failed to fetch table");
+        throw new Error(err.message || "Failed to fetch table data");
       }
 
       const mejaId = await resMeja.json().then(r => r.id);
@@ -22,11 +22,19 @@ export function useLoginMutation() {
         method: "POST",
       });
 
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create session");
+      }
+
       return res.json();
     },
     onSuccess: (data) => {
       localStorage.setItem("session_id", data.sessionId);
       router.push("/menu");
     },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "An unexpected error occurred");
+    }
   });
 }

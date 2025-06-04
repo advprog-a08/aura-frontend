@@ -48,7 +48,7 @@ export function useCreateMenu() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (menu: { name: string, description: string, imageUrl: string, quantity: number | null, price: number }) => {
-      const res = await fetch("http://localhost:8080/api/menus", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(menu),
@@ -66,7 +66,7 @@ export function useDeleteMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`http://localhost:8080/api/menus/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_MEWING_MENU}/api/menus/${id}`, {
         method: "DELETE",
       })
       if (!res.ok) throw new Error("Failed to delete menu item")

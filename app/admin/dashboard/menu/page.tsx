@@ -1,12 +1,6 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
@@ -17,16 +11,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Pencil, Trash2, Plus, Star } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { useMenuQuery, useMenuMutation, useCreateMenu, useDeleteMutation } from "./hooks"
+import { FileInput } from "@/components/ui/file-input"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import { uploadFile } from "@/lib/s3"
+import { Pencil, Plus, Star, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { toast } from "sonner"
+import { useCreateMenu, useDeleteMutation, useMenuMutation, useMenuQuery } from "./hooks"
 
 export default function MenuManagement() {
   const { data, isLoading, error } = useMenuQuery()
   const menuItems = Array.isArray(data) ? data : []
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
   const [addItem, setAddItem] = useState<any>({
     name: "",
     description: "",
@@ -34,6 +34,7 @@ export default function MenuManagement() {
     available: true,
     image: "",
     quantity: null,
+    imageFile: null,
   })
   const [currentItem, setCurrentItem] = useState<any>({
     name: "",
@@ -44,25 +45,29 @@ export default function MenuManagement() {
     id: "",
     quantity: null,
   })
-  const { toast } = useToast()
   const menuMutation = useMenuMutation()
   const createMenu = useCreateMenu()
   const deleteMutation = useDeleteMutation()
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
+    console.log("Adding item:", addItem);
+    
     if (!addItem.name || !addItem.description || !addItem.price) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      })
+      toast.error("Please fill in all required fields.")
       return
     }
+
+    // Upload IMage to S3
+    const url = await uploadFile(addItem.imageFile, `menu/${addItem.name.replace(/\s+/g, '-').toLowerCase()}/${Date.now()}`, 'rizzserve-menu')
+
+    console.log(url);
+    
+
     createMenu.mutate(
       {
         name: addItem.name,
         description: addItem.description,
-        imageUrl: addItem.image,
+        imageUrl: url || '',
         quantity: addItem.quantity ?? null,
         price: parseFloat(addItem.price),
       },
@@ -70,37 +75,32 @@ export default function MenuManagement() {
         onSuccess: (data) => {
           setIsAddDialogOpen(false)
           resetAddForm()
-          toast({
-            title: "Menu Item Added",
-            description: `${addItem.name} has been added to the menu.`,
-          })
+          toast.success("Menu Item Added")
         },
         onError: (error: any) => {
-          toast({
-            title: "Add Failed",
-            description: error?.message || "Failed to add menu item.",
-            variant: "destructive",
-          })
+          toast.error("Add Failed")
         },
       }
     )
   }
 
-  const handleEditItem = () => {
+  const handleEditItem = async () => {
     if (!currentItem.name || !currentItem.description || !currentItem.price) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      })
+      toast.error("Missing Information")
       return
     }
+
+    // Upload Image to S3 if it exists
+    const url = await currentItem.imageFile
+      ? await uploadFile(currentItem.imageFile, `menu/${currentItem.name.replace(/\s+/g, '-').toLowerCase()}/${Date.now()}`, 'rizzserve-menu')
+      : "";
+
     menuMutation.mutate(
       {
         id: currentItem.id,
         name: currentItem.name,
         description: currentItem.description,
-        imageUrl: currentItem.image,
+        imageUrl: url || '',
         quantity: currentItem.quantity ?? null,
         price: parseFloat(currentItem.price),
       },
@@ -108,17 +108,10 @@ export default function MenuManagement() {
         onSuccess: (data) => {
           setIsEditDialogOpen(false)
           resetForm()
-          toast({
-            title: "Menu Item Updated",
-            description: `${currentItem.name} has been updated.`,
-          })
+          toast.success("Menu Item Updated")
         },
         onError: (error: any) => {
-          toast({
-            title: "Update Failed",
-            description: error?.message || "Failed to update menu item.",
-            variant: "destructive",
-          })
+          toast.error("Update Failed")
         },
       }
     )
@@ -127,18 +120,10 @@ export default function MenuManagement() {
   const handleDeleteItem = (id: string) => {
     deleteMutation.mutate(id, {
       onSuccess: () => {
-        toast({
-          title: "Menu Item Deleted",
-          description: "The menu item has been deleted successfully.",
-          variant: "destructive",
-        })
+        toast.success("Menu Item Deleted")
       },
       onError: (error: any) => {
-        toast({
-          title: "Delete Failed",
-          description: error?.message || "Failed to delete menu item.",
-          variant: "destructive",
-        })
+        toast.error("Delete Failed");
       },
     })
   }
@@ -203,7 +188,7 @@ export default function MenuManagement() {
                 <Plus className="mr-2 h-4 w-4" /> Add Menu Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[90%] overflow-auto">
               <DialogHeader>
                 <DialogTitle>Add New Menu Item</DialogTitle>
                 <DialogDescription>Fill in the details for the new menu item.</DialogDescription>
@@ -248,12 +233,15 @@ export default function MenuManagement() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="image">Image URL (Optional)</Label>
-                  <Input
-                    id="image"
-                    value={addItem.image}
-                    onChange={(e) => setAddItem({ ...addItem, image: e.target.value })}
-                    placeholder="e.g. /images/nasi-goreng.jpg"
+                  <Label htmlFor="image-file">Image File (Optional)</Label>
+                  <FileInput
+                    onFileChange={(file) => {
+                      setAddItem({
+                        ...addItem,
+                        imageFile: file,
+                      })
+                    }}
+                    file={addItem.imageFile}
                   />
                 </div>
               </div>
@@ -374,11 +362,16 @@ export default function MenuManagement() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-image">Image URL (Optional)</Label>
-                <Input
-                  id="edit-image"
-                  value={currentItem.image}
-                  onChange={(e) => setCurrentItem({ ...currentItem, image: e.target.value })}
+                <Label htmlFor="edit-image">Image File (Optional)</Label>
+                <FileInput
+                  onFileChange={(file) => {
+                    setCurrentItem({
+                      ...currentItem,
+                      imageFile: file,
+                    })
+                  }
+                  }
+                  file={currentItem.imageFile}
                 />
               </div>
             </div>
