@@ -12,6 +12,9 @@ export interface ApiResponse {
   success: boolean
   message: string
   data: MenuItem[]
+  total?: number 
+  page?: number
+  limit?: number
 }
 
 export interface UserRating {
@@ -29,4 +32,14 @@ export interface RatingResponse {
     rating: number
     createdAt: string
   } | null
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean
+  message: string
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
 }
