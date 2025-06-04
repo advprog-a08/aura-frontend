@@ -27,7 +27,9 @@ export default function MenuManagement() {
   const { data, isLoading, error } = useMenuQuery()
   const router = useRouter();
 
-  const menuItems = Array.isArray(data) ? data : []
+  const menuItems = Array.isArray(data) ? data.sort(
+    (a, b) => a.name.localeCompare(b.name)
+  ) : []
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
